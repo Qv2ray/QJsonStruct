@@ -12,6 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt5 COMPONENTS Core REQUIRED)
 
+
 add_executable(QJsonStruct #STATIC
   QJsonStruct.cpp
   QJsonStruct.hpp
@@ -20,6 +21,4 @@ add_executable(QJsonStruct #STATIC
   macroexpansion.hpp
 )
 
-target_link_libraries(QJsonStruct PRIVATE Qt5::Core)
-
-target_compile_definitions(QJsonStruct PRIVATE QJSONSTRUCT_LIBRARY)
+target_link_libraries(QJsonStruct Qt5::Core)
