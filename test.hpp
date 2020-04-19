@@ -8,13 +8,14 @@
 struct BaseStruct
 {
     QString baseStr;
-    QSTRUCT_REGISTER(BaseStruct, baseStr)
+    int o;
+    QSTRUCT_REGISTER(BaseStruct, F(baseStr, o))
 };
 
 struct TestInnerStruct : BaseStruct
 {
     QString str;
-    QSTRUCT_REGISTER(TestInnerStruct, str, baseStr)
+    QSTRUCT_REGISTER(TestInnerStruct, F(str, baseStr))
 };
 
 struct TestStruct
@@ -28,7 +29,7 @@ struct TestStruct
     QMap<QString, QString> map;
     TestInnerStruct inner;
 
-    QSTRUCT_REGISTER(TestStruct, map, listOfBool, str, listOfString, listOfNumber, listOfListOfString, inner);
+    QSTRUCT_REGISTER(TestStruct, F(str, listOfNumber, listOfBool, listOfString, listOfListOfString, map, inner));
 
     TestStruct()
     {

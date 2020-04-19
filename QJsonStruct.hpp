@@ -6,6 +6,24 @@
 #include <QList>
 #include <QVariant>
 
+#define LOAD_JSON_CONVERT_F_FUNC(name) JsonStruct::loadData(this->name, ___json_object_[#name]);
+#define LOAD_JSON_CONVERT_B_FUNC(base)
+#define LOAD_JSON_CONVERT_FUNC_DECL_F(...) FOREACH_CALL_FUNC_2(LOAD_JSON_CONVERT_F_FUNC, __VA_ARGS__)
+#define LOAD_JSON_CONVERT_FUNC_DECL_B(...) FOREACH_CALL_FUNC_2(LOAD_JSON_CONVERT_B_FUNC, __VA_ARGS__)
+#define LOAD_JSON_EXTRACT_B_F(name_option) LOAD_JSON_CONVERT_FUNC_DECL_##name_option
+
+#define QSTRUCT_REGISTER(classType, ...)                                                                                                        \
+    void loadJson(const QJsonObject &___json_object_)                                                                                           \
+    {                                                                                                                                           \
+        FOREACH_CALL_FUNC(LOAD_JSON_EXTRACT_B_F, __VA_ARGS__)                                                                                   \
+    }                                                                                                                                           \
+    [[nodiscard]] static classType fromJson(const QJsonObject &___json_object_)                                                                 \
+    {                                                                                                                                           \
+        classType _t;                                                                                                                           \
+        _t.loadJson(___json_object_);                                                                                                           \
+        return _t;                                                                                                                              \
+    }
+
 class JsonStruct
 {
   public:
@@ -78,17 +96,3 @@ class JsonStruct
 };
 
 inline std::function<void(const QString &)> JsonStruct::logger = {};
-
-#define CONVERT_FUNC_DECL(name) JsonStruct::loadData(this->name, o[#name]);
-
-#define QSTRUCT_REGISTER(classType, ...)                                                                                                        \
-    void loadJson(const QJsonObject &o)                                                                                                         \
-    {                                                                                                                                           \
-        FOREACH_CALL_FUNC(CONVERT_FUNC_DECL, __VA_ARGS__)                                                                                       \
-    }                                                                                                                                           \
-    [[nodiscard]] static classType fromJson(const QJsonObject &o)                                                                               \
-    {                                                                                                                                           \
-        classType _t;                                                                                                                           \
-        _t.loadJson(o);                                                                                                                         \
-        return _t;                                                                                                                              \
-    }

@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
     TestStruct t;
     t.loadJson({ { "str", "data" } });
     auto s = t.str;
+    BaseStruct b;
+    b.loadJson({});
     //
     return app.exec();
 }
