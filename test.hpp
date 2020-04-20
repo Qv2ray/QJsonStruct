@@ -1,21 +1,22 @@
 #pragma once
 #include "QJsonStruct.hpp"
-
-#include <QList>
-#include <QString>
-#include <QStringList>
+#ifndef _X
+    #include <QList>
+    #include <QString>
+    #include <QStringList>
+#endif
 
 struct BaseStruct
 {
     QString baseStr;
     int o;
-    QSTRUCT_REGISTER(BaseStruct, F(baseStr, o))
+    JSONSTRUCT_REGISTER(BaseStruct, F(baseStr, o))
 };
 
 struct TestInnerStruct : BaseStruct
 {
     QString str;
-    QSTRUCT_REGISTER(TestInnerStruct, F(str, baseStr))
+    JSONSTRUCT_REGISTER(TestInnerStruct, B(BaseStruct), F(str))
 };
 
 struct TestStruct
@@ -29,7 +30,7 @@ struct TestStruct
     QMap<QString, QString> map;
     TestInnerStruct inner;
 
-    QSTRUCT_REGISTER(TestStruct, F(str, listOfNumber, listOfBool, listOfString, listOfListOfString, map, inner));
+    JSONSTRUCT_REGISTER(TestStruct, F(str, listOfNumber, listOfBool, listOfString, listOfListOfString, map, inner));
 
     TestStruct()
     {

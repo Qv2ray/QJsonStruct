@@ -14,7 +14,6 @@ find_package(Qt5 COMPONENTS Core REQUIRED)
 
 
 add_executable(QJsonStruct #STATIC
-  QJsonStruct.cpp
   QJsonStruct.hpp
   main.cpp
   test.hpp

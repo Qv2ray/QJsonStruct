@@ -1,86 +1,101 @@
 #pragma once
 #include "macroexpansion.hpp"
 
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QList>
-#include <QVariant>
+#ifndef _X
+    #include <QJsonArray>
+    #include <QJsonObject>
+    #include <QList>
+    #include <QVariant>
+#endif
 
-#define LOAD_JSON_CONVERT_F_FUNC(name) JsonStruct::loadData(this->name, ___json_object_[#name]);
-#define LOAD_JSON_CONVERT_B_FUNC(base)
-#define LOAD_JSON_CONVERT_FUNC_DECL_F(...) FOREACH_CALL_FUNC_2(LOAD_JSON_CONVERT_F_FUNC, __VA_ARGS__)
-#define LOAD_JSON_CONVERT_FUNC_DECL_B(...) FOREACH_CALL_FUNC_2(LOAD_JSON_CONVERT_B_FUNC, __VA_ARGS__)
-#define LOAD_JSON_EXTRACT_B_F(name_option) LOAD_JSON_CONVERT_FUNC_DECL_##name_option
+//
+#define ___LOAD_JSON_CONVERT_F_FUNC(name) JsonStructHelper::___json_struct_load_data(this->name, ___json_object_[#name])
+//
+#define ___LOAD_JSON_CONVERT_B_FUNC(...) FOREACH_CALL_FUNC_3(___LOAD_JSON_CONVERT_B_FUNC_IMPL, __VA_ARGS__)
+#define ___LOAD_JSON_CONVERT_B_FUNC_IMPL(name) name::loadJson(___json_object_)
+//
+#define ___LOAD_JSON_CONVERT_FUNC_DECL_F(...) FOREACH_CALL_FUNC_2(___LOAD_JSON_CONVERT_F_FUNC, __VA_ARGS__)
+#define ___LOAD_JSON_CONVERT_FUNC_DECL_B(...) FOREACH_CALL_FUNC_2(___LOAD_JSON_CONVERT_B_FUNC, __VA_ARGS__)
+//
+#define ___LOAD_JSON_EXTRACT_B_F(name_option) ___LOAD_JSON_CONVERT_FUNC_DECL_##name_option
+//
+// =====================
+//
+#define ___STORE_JSON_CONVERT_F_FUNC(name) ___json_object_.insert(#name, JsonStructHelper::___json_struct_store_data(name))
+//
+#define ___STORE_JSON_CONVERT_B_FUNC_IMPL(name) JsonStructHelper::__json_struct_merge_json(___json_object_, name::toJson());
+#define ___STORE_JSON_CONVERT_B_FUNC(...) FOREACH_CALL_FUNC_3(___STORE_JSON_CONVERT_B_FUNC_IMPL, __VA_ARGS__)
+//
+#define ___STORE_JSON_CONVERT_FUNC_DECL_F(...) FOREACH_CALL_FUNC_2(___STORE_JSON_CONVERT_F_FUNC, __VA_ARGS__)
+#define ___STORE_JSON_CONVERT_FUNC_DECL_B(...) FOREACH_CALL_FUNC_2(___STORE_JSON_CONVERT_B_FUNC, __VA_ARGS__)
+//
+#define ___STORE_JSON_EXTRACT_B_F(name_option) ___STORE_JSON_CONVERT_FUNC_DECL_##name_option
 
-#define QSTRUCT_REGISTER(classType, ...)                                                                                                        \
+#define JSONSTRUCT_REGISTER(___class_type_, ...)                                                                                                \
     void loadJson(const QJsonObject &___json_object_)                                                                                           \
     {                                                                                                                                           \
-        FOREACH_CALL_FUNC(LOAD_JSON_EXTRACT_B_F, __VA_ARGS__)                                                                                   \
+        FOREACH_CALL_FUNC(___LOAD_JSON_EXTRACT_B_F, __VA_ARGS__);                                                                               \
     }                                                                                                                                           \
-    [[nodiscard]] static classType fromJson(const QJsonObject &___json_object_)                                                                 \
+    [[nodiscard]] static auto fromJson(const QJsonObject &___json_object_)                                                                      \
     {                                                                                                                                           \
-        classType _t;                                                                                                                           \
+        ___class_type_ _t;                                                                                                                      \
         _t.loadJson(___json_object_);                                                                                                           \
         return _t;                                                                                                                              \
+    }                                                                                                                                           \
+    [[nodiscard]] const QJsonObject toJson() const                                                                                              \
+    {                                                                                                                                           \
+        QJsonObject ___json_object_;                                                                                                            \
+        FOREACH_CALL_FUNC(___STORE_JSON_EXTRACT_B_F, __VA_ARGS__);                                                                              \
+        return ___json_object_;                                                                                                                 \
     }
 
-class JsonStruct
+#define ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(type, convert_func)                                                                           \
+    static void ___json_struct_load_data(type &t, const QJsonValue &d)                                                                          \
+    {                                                                                                                                           \
+        t = d.convert_func();                                                                                                                   \
+    }
+class JsonStructHelper
 {
   public:
     static std::function<void(const QString &)> logger;
+    static void __json_struct_merge_json(QJsonObject &mergeTo, const QJsonObject &mergeIn)
+    {
+        for (const auto &key : mergeIn.keys())
+        {
+            mergeTo[key] = mergeIn.value(key);
+        }
+    }
     //
     template<typename T>
-    static void loadData(T &t, const QJsonValue &d)
+    static void ___json_struct_load_data(T &t, const QJsonValue &d)
     {
         t.loadJson(d.toObject());
     }
-    static void loadData(QString &t, const QJsonValue &d)
-    {
-        t = d.toString();
-    }
-    static void loadData(bool &t, const QJsonValue &d)
-    {
-        t = d.toBool();
-    }
-    static void loadData(int &t, const QJsonValue &d)
-    {
-        t = d.toInt();
-    }
-    static void loadData(double &t, const QJsonValue &d)
-    {
-        t = d.toDouble();
-    }
-    static void loadData(long &t, const QJsonValue &d)
-    {
-        t = d.toVariant().toLongLong();
-    }
-    static void loadData(unsigned int &t, const QJsonValue &d)
-    {
-        t = d.toVariant().toUInt();
-    }
-    static void loadData(unsigned long &t, const QJsonValue &d)
-    {
-        t = d.toVariant().toULongLong();
-    }
-    static void loadData(float &t, const QJsonValue &d)
-    {
-        t = d.toVariant().toFloat();
-    }
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(QString, toString);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(std::string, toString().toStdString);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(std::wstring, toString().toStdWString);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(bool, toBool);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(int, toInt);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(double, toDouble);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(float, toVariant().toFloat);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(long, toVariant().toLongLong);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned int, toVariant().toUInt);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned long, toVariant().toULongLong);
 
     template<typename T>
-    static void loadData(QList<T> &t, const QJsonValue &d)
+    static void ___json_struct_load_data(QList<T> &t, const QJsonValue &d)
     {
         t.clear();
         for (const auto &val : d.toArray())
         {
             T data;
-            loadData(data, val);
+            ___json_struct_load_data(data, val);
             t.push_back(data);
         }
     }
 
     template<typename TKey, typename TValue>
-    static void loadData(QMap<TKey, TValue> &t, const QJsonValue &d)
+    static void ___json_struct_load_data(QMap<TKey, TValue> &t, const QJsonValue &d)
     {
         t.clear();
         const auto &jsonObject = d.toObject();
@@ -88,11 +103,50 @@ class JsonStruct
         TValue valueVal;
         for (const auto &key : jsonObject.keys())
         {
-            loadData(keyVal, key);
-            loadData(valueVal, jsonObject.value(key));
+            ___json_struct_load_data(keyVal, key);
+            ___json_struct_load_data(valueVal, jsonObject.value(key));
             t.insert(keyVal, valueVal);
         }
     }
+    // =========================== Store Json Data ===========================
+#define ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(type)                                                                                        \
+    static QJsonValue ___json_struct_store_data(const type &t)                                                                                  \
+    {                                                                                                                                           \
+        return QJsonValue(t);                                                                                                                   \
+    }
+    template<typename T>
+    static QJsonValue ___json_struct_store_data(const T &t)
+    {
+        return t.toJson();
+    }
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(int);
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(bool);
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(QJsonArray);
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(QJsonObject);
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(QString);
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(qint64);
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(double);
+    template<typename TValue>
+    static QJsonValue ___json_struct_store_data(const QMap<QString, TValue> &t)
+    {
+        QJsonObject mapObject;
+        for (const auto &key : t.keys())
+        {
+            auto valueVal = ___json_struct_store_data(t.value(key));
+            mapObject.insert(key, valueVal);
+        }
+        return mapObject;
+    }
+    template<typename T>
+    static QJsonValue ___json_struct_store_data(const QList<T> &t)
+    {
+        QJsonArray listObject;
+        for (const auto &item : t)
+        {
+            listObject.push_back(___json_struct_store_data(item));
+        }
+        return listObject;
+    }
 };
 
-inline std::function<void(const QString &)> JsonStruct::logger = {};
+inline std::function<void(const QString &)> JsonStructHelper::logger = {};

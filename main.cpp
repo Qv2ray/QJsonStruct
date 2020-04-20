@@ -2,12 +2,14 @@
 #include "test.hpp"
 
 #include <QCoreApplication>
+#include <QJsonDocument>
 #include <QString>
+#include <iostream>
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication app(argc, argv);
-    //
+    Q_UNUSED(argc)
+    Q_UNUSED(argv)
     auto f = TestStruct::fromJson( //
         {
             { "inner", QJsonObject{ { "str", "innerString" }, { "baseStr", "baseInnerString" } } }, //
@@ -22,11 +24,7 @@ int main(int argc, char *argv[])
                                                 QJsonArray{ "1", "2", "3", "4" },                   //
                                                 QJsonArray{ "1", "2", "3", "4", "5" } } },          //
         });
-    TestStruct t;
-    t.loadJson({ { "str", "data" } });
-    auto s = t.str;
-    BaseStruct b;
-    b.loadJson({});
-    //
-    return app.exec();
+    auto x = f.toJson();
+    std::cout << QJsonDocument(x).toJson().toStdString() << std::endl;
+    return 0;
 }
