@@ -13,10 +13,18 @@ struct BaseStruct
     JSONSTRUCT_REGISTER(BaseStruct, F(baseStr, o))
 };
 
-struct TestInnerStruct : BaseStruct
+struct BaseStruct2
+{
+    QString baseStr2;
+    int o2;
+    JSONSTRUCT_REGISTER(BaseStruct, F(baseStr2, o2))
+};
+struct TestInnerStruct
+    : BaseStruct
+    , BaseStruct2
 {
     QString str;
-    JSONSTRUCT_REGISTER(TestInnerStruct, B(BaseStruct), F(str))
+    JSONSTRUCT_REGISTER(TestInnerStruct, B(BaseStruct, BaseStruct2), F(str))
 };
 
 struct TestStruct
