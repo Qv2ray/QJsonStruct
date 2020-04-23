@@ -57,7 +57,6 @@
 class JsonStructHelper
 {
   public:
-    static std::function<void(const QString &)> logger;
     static void __json_struct_merge_json(QJsonObject &mergeTo, const QJsonObject &mergeIn)
     {
         for (const auto &key : mergeIn.keys())
@@ -148,5 +147,3 @@ class JsonStructHelper
         return listObject;
     }
 };
-
-inline std::function<void(const QString &)> JsonStructHelper::logger = {};
