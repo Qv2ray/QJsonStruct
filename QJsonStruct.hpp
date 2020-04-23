@@ -52,7 +52,8 @@
 #define ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(type, convert_func)                                                                           \
     static void ___json_struct_load_data(type &t, const QJsonValue &d)                                                                          \
     {                                                                                                                                           \
-        t = d.convert_func();                                                                                                                   \
+        if (!d.isNull() && !d.isUndefined())                                                                                                    \
+            t = d.convert_func();                                                                                                               \
     }
 class JsonStructHelper
 {
