@@ -27,7 +27,7 @@ struct TestInnerStruct
     JSONSTRUCT_REGISTER(TestInnerStruct, B(BaseStruct, BaseStruct2), F(str))
 };
 
-struct TestStruct
+struct JsonIO
 {
     QString str;
     QList<int> listOfNumber;
@@ -38,9 +38,9 @@ struct TestStruct
     QMap<QString, QString> map;
     TestInnerStruct inner;
 
-    JSONSTRUCT_REGISTER(TestStruct, F(str, listOfNumber, listOfBool, listOfString, listOfListOfString, map, inner));
+    JSONSTRUCT_REGISTER(JsonIO, F(str, listOfNumber, listOfBool, listOfString, listOfListOfString, map, inner));
 
-    TestStruct()
+    JsonIO()
     {
     }
 };

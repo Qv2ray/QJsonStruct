@@ -8,6 +8,23 @@
     #include <QVariant>
 #endif
 
+template<class C>
+class has_tojson_func
+{
+    template<class T>
+    static std::true_type testSignature(QJsonObject (T::*)() const);
+
+    template<class T>
+    static decltype(testSignature(&T::toJson)) test(std::nullptr_t);
+
+    template<class T>
+    static std::false_type test(...);
+
+  public:
+    using type = decltype(test<C>(nullptr));
+    static const bool value = type::value;
+};
+
 //
 #define ___LOAD_JSON_CONVERT_F_FUNC(name) JsonStructHelper::___json_struct_load_data(this->name, ___json_object_[#name]);
 //
@@ -25,6 +42,7 @@
 //
 #define ___STORE_JSON_CONVERT_B_FUNC_IMPL(name) JsonStructHelper::__json_struct_merge_json(___json_object_, name::toJson());
 #define ___STORE_JSON_CONVERT_B_FUNC(...) FOREACH_CALL_FUNC_3(___STORE_JSON_CONVERT_B_FUNC_IMPL, __VA_ARGS__)
+//
 //
 #define ___STORE_JSON_CONVERT_FUNC_DECL_F(...) FOREACH_CALL_FUNC_2(___STORE_JSON_CONVERT_F_FUNC, __VA_ARGS__)
 #define ___STORE_JSON_CONVERT_FUNC_DECL_B(...) FOREACH_CALL_FUNC_2(___STORE_JSON_CONVERT_B_FUNC, __VA_ARGS__)
@@ -148,3 +166,28 @@ class JsonStructHelper
         return listObject;
     }
 };
+
+void ____extract_json(QJsonObject &){};
+template<typename _tVAL, typename... _other>
+void ____extract_json(QJsonObject &o, const QString &key, const _tVAL &value, const _other &... others)
+{
+    if constexpr (has_tojson_func<_tVAL>::value)
+    {
+        o[key] = value.toJson();
+    }
+    else
+    {
+        o[key] = JsonStructHelper::___json_struct_store_data(value);
+    }
+    ____extract_json(o, others...);
+}
+
+#define __EXTRACT(n) , #n, n
+#define __CALL_X(json, ...) ____extract_json(json FOREACH_CALL_FUNC(__EXTRACT, __VA_ARGS__))
+#define JSONSTRUCT_REGISTER_TOJSON(...)                                                                                                         \
+    [[nodiscard]] QJsonObject toJson() const                                                                                                    \
+    {                                                                                                                                           \
+        QJsonObject ___json_object;                                                                                                             \
+        __CALL_X(___json_object, __VA_ARGS__);                                                                                                  \
+        return ___json_object;                                                                                                                  \
+    }
