@@ -9,10 +9,10 @@
 #endif
 
 //
-#define ___LOAD_JSON_CONVERT_F_FUNC(name) JsonStructHelper::___json_struct_load_data(this->name, ___json_object_[#name])
+#define ___LOAD_JSON_CONVERT_F_FUNC(name) JsonStructHelper::___json_struct_load_data(this->name, ___json_object_[#name]);
 //
 #define ___LOAD_JSON_CONVERT_B_FUNC(...) FOREACH_CALL_FUNC_3(___LOAD_JSON_CONVERT_B_FUNC_IMPL, __VA_ARGS__)
-#define ___LOAD_JSON_CONVERT_B_FUNC_IMPL(name) name::loadJson(___json_object_)
+#define ___LOAD_JSON_CONVERT_B_FUNC_IMPL(name) name::loadJson(___json_object_);
 //
 #define ___LOAD_JSON_CONVERT_FUNC_DECL_F(...) FOREACH_CALL_FUNC_2(___LOAD_JSON_CONVERT_F_FUNC, __VA_ARGS__)
 #define ___LOAD_JSON_CONVERT_FUNC_DECL_B(...) FOREACH_CALL_FUNC_2(___LOAD_JSON_CONVERT_B_FUNC, __VA_ARGS__)
@@ -21,7 +21,7 @@
 //
 // =====================
 //
-#define ___STORE_JSON_CONVERT_F_FUNC(name) ___json_object_.insert(#name, JsonStructHelper::___json_struct_store_data(name))
+#define ___STORE_JSON_CONVERT_F_FUNC(name) ___json_object_.insert(#name, JsonStructHelper::___json_struct_store_data(name));
 //
 #define ___STORE_JSON_CONVERT_B_FUNC_IMPL(name) JsonStructHelper::__json_struct_merge_json(___json_object_, name::toJson());
 #define ___STORE_JSON_CONVERT_B_FUNC(...) FOREACH_CALL_FUNC_3(___STORE_JSON_CONVERT_B_FUNC_IMPL, __VA_ARGS__)
