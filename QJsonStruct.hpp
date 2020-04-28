@@ -87,7 +87,10 @@ class JsonStructHelper
     template<typename T>
     static void ___json_struct_load_data(T &t, const QJsonValue &d)
     {
-        t.loadJson(d.toObject());
+        if constexpr (std::is_enum<T>::value)
+            t = (T) d.toInt();
+        else
+            t.loadJson(d.toObject());
     }
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(QString, toString);
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(std::string, toString().toStdString);
@@ -99,6 +102,8 @@ class JsonStructHelper
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(long, toVariant().toLongLong);
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned int, toVariant().toUInt);
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned long, toVariant().toULongLong);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(quint64, toVariant().toULongLong);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(qint64, toVariant().toLongLong);
 
     template<typename T>
     static void ___json_struct_load_data(QList<T> &t, const QJsonValue &d)
@@ -135,7 +140,10 @@ class JsonStructHelper
     template<typename T>
     static QJsonValue ___json_struct_store_data(const T &t)
     {
-        return t.toJson();
+        if constexpr (std::is_enum<T>::value)
+            return (int) t;
+        else
+            return t.toJson();
     }
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(int);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(bool);
@@ -143,6 +151,7 @@ class JsonStructHelper
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(QJsonObject);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(QString);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(qint64);
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(float);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(double);
     template<typename TValue>
     static QJsonValue ___json_struct_store_data(const QMap<QString, TValue> &t)
@@ -165,25 +174,25 @@ class JsonStructHelper
         }
         return listObject;
     }
+
+    static void ____extract_json(QJsonObject &){};
+    template<typename _tVAL, typename... _other>
+    static void ____extract_json(QJsonObject &o, const QString &key, const _tVAL &value, const _other &... others)
+    {
+        if constexpr (has_tojson_func<_tVAL>::value)
+        {
+            o[key] = value.toJson();
+        }
+        else
+        {
+            o[key] = JsonStructHelper::___json_struct_store_data(value);
+        }
+        ____extract_json(o, others...);
+    }
 };
 
-void ____extract_json(QJsonObject &){};
-template<typename _tVAL, typename... _other>
-void ____extract_json(QJsonObject &o, const QString &key, const _tVAL &value, const _other &... others)
-{
-    if constexpr (has_tojson_func<_tVAL>::value)
-    {
-        o[key] = value.toJson();
-    }
-    else
-    {
-        o[key] = JsonStructHelper::___json_struct_store_data(value);
-    }
-    ____extract_json(o, others...);
-}
-
 #define __EXTRACT(n) , #n, n
-#define __CALL_X(json, ...) ____extract_json(json FOREACH_CALL_FUNC(__EXTRACT, __VA_ARGS__))
+#define __CALL_X(json, ...) JsonStructHelper::____extract_json(json FOREACH_CALL_FUNC(__EXTRACT, __VA_ARGS__))
 #define JSONSTRUCT_REGISTER_TOJSON(...)                                                                                                         \
     [[nodiscard]] QJsonObject toJson() const                                                                                                    \
     {                                                                                                                                           \
