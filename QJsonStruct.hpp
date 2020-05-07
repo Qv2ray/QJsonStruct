@@ -50,11 +50,11 @@ class has_tojson_func
 #define ___STORE_JSON_EXTRACT_B_F(name_option) ___STORE_JSON_CONVERT_FUNC_DECL_##name_option
 
 #define JSONSTRUCT_REGISTER(___class_type_, ...)                                                                                                \
-    void loadJson(const QJsonObject &___json_object_)                                                                                           \
+    void loadJson(const QJsonValue &___json_object_)                                                                                            \
     {                                                                                                                                           \
         FOREACH_CALL_FUNC(___LOAD_JSON_EXTRACT_B_F, __VA_ARGS__);                                                                               \
     }                                                                                                                                           \
-    [[nodiscard]] static auto fromJson(const QJsonObject &___json_object_)                                                                      \
+    [[nodiscard]] static auto fromJson(const QJsonValue &___json_object_)                                                                       \
     {                                                                                                                                           \
         ___class_type_ _t;                                                                                                                      \
         _t.loadJson(___json_object_);                                                                                                           \
@@ -90,7 +90,7 @@ class JsonStructHelper
         if constexpr (std::is_enum<T>::value)
             t = (T) d.toInt();
         else
-            t.loadJson(d.toObject());
+            t.loadJson(d);
     }
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(QString, toString);
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(std::string, toString().toStdString);
