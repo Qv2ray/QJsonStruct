@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     //
     {
         auto f = JsonIO::fromJson( //
-            {
+            QJsonObject{
                 { "inner", QJsonObject{ { "str", "innerString" }, { "baseStr", "baseInnerString" } } }, //
                 { "str", "data1" },                                                                     //
                 { "map", QJsonObject{ { "mapStr", "mapData" } } },                                      //
