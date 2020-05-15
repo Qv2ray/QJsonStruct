@@ -11,7 +11,7 @@ class QJsonIO
     static QJsonValue GetValue(const QJsonValue &parent, const current_key_type &current, const t_other_types &... other)
     {
         if constexpr (sizeof...(t_other_types) == 0)
-            return parent;
+            return parent[current];
         else if constexpr (std::is_same<current_key_type, QJsonArray::size_type>::value)
             return GetValue(parent.toArray()[current], other...);
         else
