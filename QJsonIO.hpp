@@ -31,24 +31,19 @@ class QJsonIO
         // Means we have reached the end of recursion.
         if constexpr (sizeof...(t_other_key_types) == 0)
             parent[current] = val;
+        else if constexpr (std::is_same<typename std::tuple_element<0, std::tuple<t_other_key_types...>>::type, QJsonArray::size_type>::value)
+        {
+            // Means we still have many keys
+            // So this element is an array.
+            auto _array = parent[current].toArray();
+            SetValue(_array, val, other...);
+            parent[current] = _array;
+        }
         else
         {
-            using next_key_type = typename std::tuple_element<0, std::tuple<t_other_key_types...>>::type;
-
-            // Means we still have many keys
-            if constexpr (std::is_same<next_key_type, QJsonArray::size_type>::value)
-            {
-                // So this element is an array.
-                auto _array = parent[current].toArray();
-                SetValue(_array, val, other...);
-                parent[current] = _array;
-            }
-            else
-            {
-                auto _object = parent[current].toObject();
-                SetValue(_object, val, other...);
-                parent[current] = _object;
-            }
+            auto _object = parent[current].toObject();
+            SetValue(_object, val, other...);
+            parent[current] = _object;
         }
     }
 };
