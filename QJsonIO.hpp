@@ -7,6 +7,8 @@
 class QJsonIO
 {
   public:
+    const static inline auto Null = QJsonValue(QJsonValue::Null);
+    const static inline auto Undefined = QJsonValue(QJsonValue::Undefined);
     template<typename current_key_type, typename... t_other_types>
     static QJsonValue GetValue(const QJsonValue &parent, const current_key_type &current, const t_other_types &... other)
     {
