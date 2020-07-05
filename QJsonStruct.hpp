@@ -96,14 +96,14 @@ class JsonStructHelper
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(std::string, toString().toStdString);
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(std::wstring, toString().toStdWString);
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(bool, toBool);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(int, toInt);
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(double, toDouble);
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(float, toVariant().toFloat);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(int, toInt);
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(long, toVariant().toLongLong);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(long long, toVariant().toLongLong);
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned int, toVariant().toUInt);
     ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned long, toVariant().toULongLong);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(quint64, toVariant().toULongLong);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(qint64, toVariant().toLongLong);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned long long, toVariant().toULongLong);
 
     template<typename T>
     static void ___json_struct_load_data(QList<T> &t, const QJsonValue &d)
@@ -150,9 +150,18 @@ class JsonStructHelper
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(QJsonArray);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(QJsonObject);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(QString);
-    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(qint64);
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(long long);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(float);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(double);
+    //
+#define ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(type)                                                                                  \
+    static QJsonValue ___json_struct_store_data(const type &t)                                                                                  \
+    {                                                                                                                                           \
+        return QJsonValue((qint64) t);                                                                                                          \
+    }
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(long);
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(unsigned long);
+    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(unsigned long long);
     template<typename TValue>
     static QJsonValue ___json_struct_store_data(const QMap<QString, TValue> &t)
     {
