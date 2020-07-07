@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
                                                 QJsonArray{ "1", "2", "3", "4" },                   //
                                                 QJsonArray{ "1", "2", "3", "4", "5" } } },          //
         };
-        const auto x = QJsonIO::GetValue(obj, std::tuple{ "listOfListOfString", 2 });
+        // QJsonIO::SetValue(obj, "tttt", std::tuple{ "listOfListOfString", 2 });
+        // obj.toVariantMap();
     }
     return 0;
 }
