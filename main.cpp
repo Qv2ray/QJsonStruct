@@ -1,3 +1,4 @@
+#include "QJsonIO.hpp"
 #include "QJsonStruct.hpp"
 #include "TestIO.hpp"
 #include "TestOut.hpp"
@@ -44,6 +45,22 @@ int main(int argc, char *argv[])
             });
         auto x = f.toJson();
         std::cout << QJsonDocument(x).toJson().toStdString() << std::endl;
+    }
+    {
+        QJsonObject obj{
+            { "inner", QJsonObject{ { "str", "innerString" }, { "baseStr", "baseInnerString" } } }, //
+            { "str", "data1" },                                                                     //
+            { "map", QJsonObject{ { "mapStr", "mapData" } } },                                      //
+            { "listOfString", QJsonArray{ "1", "2", "3", "4", "5" } },                              //
+            { "listOfNumber", QJsonArray{ 1, 2, 3, 4, 5 } },                                        //
+            { "listOfBool", QJsonArray{ true, false, false, true, true } },                         //
+            { "listOfListOfString", QJsonArray{ QJsonArray{ "1" },                                  //
+                                                QJsonArray{ "1", "2" },                             //
+                                                QJsonArray{ "1", "2", "3" },                        //
+                                                QJsonArray{ "1", "2", "3", "4" },                   //
+                                                QJsonArray{ "1", "2", "3", "4", "5" } } },          //
+        };
+        const auto x = QJsonIO::GetValue(obj, std::tuple{ "listOfListOfString", 2 });
     }
     return 0;
 }

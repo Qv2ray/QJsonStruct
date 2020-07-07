@@ -4,6 +4,7 @@
 #include <QJsonValue>
 #include <tuple>
 
+
 class QJsonIO
 {
   public:
@@ -19,6 +20,14 @@ class QJsonIO
         else
             return GetValue(parent.toObject()[current], other...);
     }
+
+    template<typename... key_types_t>
+    static QJsonValue GetValue(QJsonValue value, const std::tuple<key_types_t...> &operations, const QJsonValue &defaultValue = Undefined)
+    {
+        std::apply([&](auto &&... args) { ((value = value[args]), ...); }, operations);
+        return value.isNull() || value.isUndefined() ? defaultValue : value;
+    }
+
     //
     // ========= Set Values =========
     //
