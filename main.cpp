@@ -29,19 +29,22 @@ int main(int argc, char *argv[])
     }
     //
     {
-        auto f = JsonIO::fromJson( //
+        auto f = JsonIOTest::fromJson( //
             QJsonObject{
-                { "inner", QJsonObject{ { "str", "innerString" }, { "baseStr", "baseInnerString" } } }, //
-                { "str", "data1" },                                                                     //
-                { "map", QJsonObject{ { "mapStr", "mapData" } } },                                      //
-                { "listOfString", QJsonArray{ "1", "2", "3", "4", "5" } },                              //
-                { "listOfNumber", QJsonArray{ 1, 2, 3, 4, 5 } },                                        //
-                { "listOfBool", QJsonArray{ true, false, false, true, true } },                         //
-                { "listOfListOfString", QJsonArray{ QJsonArray{ "1" },                                  //
-                                                    QJsonArray{ "1", "2" },                             //
-                                                    QJsonArray{ "1", "2", "3" },                        //
-                                                    QJsonArray{ "1", "2", "3", "4" },                   //
-                                                    QJsonArray{ "1", "2", "3", "4", "5" } } },          //
+                { "inner", QJsonObject{ { "str", "innerString" },                                 //
+                                        { "jobj", QJsonObject{ { "key", "value" } } },            //
+                                        { "jarray", QJsonArray{ "array0", "array1", "array2" } }, //
+                                        { "baseStr", "baseInnerString" } } },                     //
+                { "str", "data1" },                                                               //
+                { "map", QJsonObject{ { "mapStr", "mapData" } } },                                //
+                { "listOfString", QJsonArray{ "1", "2", "3", "4", "5" } },                        //
+                { "listOfNumber", QJsonArray{ 1, 2, 3, 4, 5 } },                                  //
+                { "listOfBool", QJsonArray{ true, false, false, true, true } },                   //
+                { "listOfListOfString", QJsonArray{ QJsonArray{ "1" },                            //
+                                                    QJsonArray{ "1", "2" },                       //
+                                                    QJsonArray{ "1", "2", "3" },                  //
+                                                    QJsonArray{ "1", "2", "3", "4" },             //
+                                                    QJsonArray{ "1", "2", "3", "4", "5" } } },    //
             });
         auto x = f.toJson();
         std::cout << QJsonDocument(x).toJson().toStdString() << std::endl;
@@ -60,8 +63,8 @@ int main(int argc, char *argv[])
                                                 QJsonArray{ "1", "2", "3", "4" },                   //
                                                 QJsonArray{ "1", "2", "3", "4", "5" } } },          //
         };
-        // QJsonIO::SetValue(obj, "tttt", std::tuple{ "listOfListOfString", 2 });
-        // obj.toVariantMap();
+        auto y = QJsonIO::GetValue(obj, std::tuple{ "listOfListOfString", 2 });
+        y.toObject();
     }
     return 0;
 }

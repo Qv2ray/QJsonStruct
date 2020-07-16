@@ -23,7 +23,7 @@ class QJsonIO
     template<typename... key_types_t>
     static QJsonValue GetValue(QJsonValue value, const std::tuple<key_types_t...> &keys, const QJsonValue &defaultValue = Undefined)
     {
-        std::apply([&](auto &&... args) -> void { ((value = value[args]), ...); }, keys);
+        std::apply([&](auto &&... args) { ((value = value[args]), ...); }, keys);
         return value.isUndefined() ? defaultValue : value;
     }
 
