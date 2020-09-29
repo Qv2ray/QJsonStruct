@@ -14,9 +14,11 @@ typedef QPair<QString, QJsonIOPathType> QJsonIONodeType;
 
 struct QJsonIOPath : QList<QJsonIONodeType>
 {
-    template<typename... types>
-    QJsonIOPath(const types... ts)
+    template<typename type1, typename type2, typename... types>
+    QJsonIOPath(const type1 t1, const type2 t2, const types... ts)
     {
+        AppendPath(t1);
+        AppendPath(t2);
         (AppendPath(ts), ...);
     }
 
@@ -30,23 +32,51 @@ struct QJsonIOPath : QList<QJsonIONodeType>
         append({ key, QJsonIOPathType::JSONIO_MODE_OBJECT });
     }
 
-    template<typename t>
-    friend QJsonIOPath &operator<<(QJsonIOPath &p, const t &str)
+    template<typename... types>
+    void AppendPath(const types... ts)
     {
-        p.AppendPath(str);
-        return p;
+        (AppendPath(ts), ...);
     }
 
     template<typename t>
-    friend QJsonIOPath &operator+(QJsonIOPath &p, const t &val)
+    QJsonIOPath &operator<<(const t &str)
     {
-        return p << val;
+        AppendPath(str);
+        return *this;
     }
 
-    friend QJsonIOPath &operator<<(QJsonIOPath &p, const QJsonIOPath &other)
+    template<typename t>
+    QJsonIOPath &operator+=(const t &val)
     {
-        for (const auto &x : other) p.append(x);
-        return p;
+        AppendPath(val);
+        return *this;
+    }
+
+    QJsonIOPath &operator<<(const QJsonIOPath &other)
+    {
+        for (const auto &x : other) this->append(x);
+        return *this;
+    }
+
+    template<typename t>
+    QJsonIOPath &operator<<(const t &val) const
+    {
+        auto _new = *this;
+        return _new << val;
+    }
+
+    template<typename t>
+    QJsonIOPath operator+(const t &val) const
+    {
+        auto _new = *this;
+        return _new << val;
+    }
+
+    QJsonIOPath operator+(const QJsonIOPath &other) const
+    {
+        auto _new = *this;
+        for (const auto &x : other) _new.append(x);
+        return _new;
     }
 };
 
@@ -101,7 +131,7 @@ class QJsonIO
         }
     }
 
-    static QJsonValue GetValue(const QJsonValue &parent, const QJsonIOPath &path, const QJsonValue &defaultValue = Undefined)
+    static QJsonValue GetValue(const QJsonValue &parent, const QJsonIOPath &path, const QJsonValue &defaultValue = QJsonIO::Undefined)
     {
         QJsonValue val = parent;
         for (const auto &[k, t] : path)
@@ -115,7 +145,7 @@ class QJsonIO
     }
 
     template<typename parent_type, typename value_type>
-    static void SetValue(parent_type &parent, const QJsonIOPath &path, const value_type &t)
+    static void SetValue(parent_type &parent, const value_type &t, const QJsonIOPath &path)
     {
         QList<std::tuple<QString, QJsonIOPathType, QJsonValue>> _stack;
         QJsonValue lastNode;
