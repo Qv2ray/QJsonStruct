@@ -4,11 +4,58 @@
 #include <QJsonValue>
 #include <tuple>
 
+enum class QJsonIOPathType
+{
+    JSONIO_MODE_ARRAY,
+    JSONIO_MODE_OBJECT
+};
+
+typedef QPair<QString, QJsonIOPathType> QJsonIONodeType;
+
+struct QJsonIOPath : QList<QJsonIONodeType>
+{
+    template<typename... types>
+    QJsonIOPath(const types... ts)
+    {
+        (AppendPath(ts), ...);
+    }
+
+    void AppendPath(size_t index)
+    {
+        append({ QString::number(index), QJsonIOPathType::JSONIO_MODE_ARRAY });
+    }
+
+    void AppendPath(const QString &key)
+    {
+        append({ key, QJsonIOPathType::JSONIO_MODE_OBJECT });
+    }
+
+    template<typename t>
+    friend QJsonIOPath &operator<<(QJsonIOPath &p, const t &str)
+    {
+        p.AppendPath(str);
+        return p;
+    }
+
+    template<typename t>
+    friend QJsonIOPath &operator+(QJsonIOPath &p, const t &val)
+    {
+        return p << val;
+    }
+
+    friend QJsonIOPath &operator<<(QJsonIOPath &p, const QJsonIOPath &other)
+    {
+        for (const auto &x : other) p.append(x);
+        return p;
+    }
+};
+
 class QJsonIO
 {
   public:
-    const static inline auto Null = QJsonValue(QJsonValue::Null);
-    const static inline auto Undefined = QJsonValue(QJsonValue::Undefined);
+    const static inline QJsonValue Null = QJsonValue::Null;
+    const static inline QJsonValue Undefined = QJsonValue::Undefined;
+
     template<typename current_key_type, typename... t_other_types>
     static QJsonValue GetValue(const QJsonValue &parent, const current_key_type &current, const t_other_types &... other)
     {
@@ -27,9 +74,6 @@ class QJsonIO
         return value.isUndefined() ? defaultValue : value;
     }
 
-    //
-    // ========= Set Values =========
-    //
     template<typename parent_type, typename t_value_type, typename current_key_type, typename... t_other_key_types>
     static void SetValue(parent_type &parent, const t_value_type &val, const current_key_type &current, const t_other_key_types &... other)
     {
@@ -55,5 +99,60 @@ class QJsonIO
             SetValue(_object, val, other...);
             parent[current] = _object;
         }
+    }
+
+    static QJsonValue GetValue(const QJsonValue &parent, const QJsonIOPath &path, const QJsonValue &defaultValue = Undefined)
+    {
+        QJsonValue val = parent;
+        for (const auto &[k, t] : path)
+        {
+            if (t == QJsonIOPathType::JSONIO_MODE_ARRAY)
+                val = val.toArray()[k.toInt()];
+            else
+                val = val.toObject()[k];
+        }
+        return val.isUndefined() ? defaultValue : val;
+    }
+
+    template<typename parent_type, typename value_type>
+    static void SetValue(parent_type &parent, const QJsonIOPath &path, const value_type &t)
+    {
+        QList<std::tuple<QString, QJsonIOPathType, QJsonValue>> _stack;
+        QJsonValue lastNode;
+        for (const auto &[key, type] : path)
+        {
+            if (type == QJsonIOPathType::JSONIO_MODE_ARRAY)
+                lastNode = lastNode.toArray()[key.toInt()];
+            else
+                lastNode = lastNode.toObject()[key];
+            _stack.prepend({ key, type, lastNode });
+        }
+
+        lastNode = t;
+
+        for (const auto &[key, type, node] : _stack)
+        {
+            if (type == QJsonIOPathType::JSONIO_MODE_ARRAY)
+            {
+                const auto index = key.toInt();
+                auto nodeArray = node.toArray();
+                for (auto i = nodeArray.size(); i <= index; i++) nodeArray.insert(i, {});
+                nodeArray[index] = lastNode;
+                lastNode = nodeArray;
+            }
+            else
+            {
+                auto nodeObject = node.toObject();
+                nodeObject[key] = lastNode;
+                lastNode = nodeObject;
+            }
+        }
+
+        if constexpr (std::is_same_v<parent_type, QJsonObject>)
+            parent = lastNode.toObject();
+        else if constexpr (std::is_same_v<parent_type, QJsonArray>)
+            parent = lastNode.toArray();
+        else
+            Q_UNREACHABLE();
     }
 };
