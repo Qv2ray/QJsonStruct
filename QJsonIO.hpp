@@ -32,12 +32,6 @@ struct QJsonIOPath : QList<QJsonIONodeType>
         append({ key, QJsonIOPathType::JSONIO_MODE_OBJECT });
     }
 
-    template<typename... types>
-    void AppendPath(const types... ts)
-    {
-        (AppendPath(ts), ...);
-    }
-
     template<typename t>
     QJsonIOPath &operator<<(const t &str)
     {
