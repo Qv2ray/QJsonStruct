@@ -49,7 +49,8 @@ struct QJsonIOPath : QList<QJsonIONodeType>
 
     QJsonIOPath &operator<<(const QJsonIOPath &other)
     {
-        for (const auto &x : other) this->append(x);
+        for (const auto &x : other)
+            this->append(x);
         return *this;
     }
 
@@ -70,7 +71,8 @@ struct QJsonIOPath : QList<QJsonIONodeType>
     QJsonIOPath operator+(const QJsonIOPath &other) const
     {
         auto _new = *this;
-        for (const auto &x : other) _new.append(x);
+        for (const auto &x : other)
+            _new.append(x);
         return _new;
     }
 };
@@ -104,7 +106,8 @@ class QJsonIO
     {
         // If current parent is an array, increase its size to fit the "key"
         if constexpr (std::is_same<current_key_type, QJsonArray::size_type>::value)
-            for (auto i = parent.size(); i <= current; i++) parent.insert(i, {});
+            for (auto i = parent.size(); i <= current; i++)
+                parent.insert(i, {});
 
         // If the t_other_key_types has nothing....
         // Means we have reached the end of recursion.
@@ -143,14 +146,14 @@ class QJsonIO
     static void SetValue(parent_type &parent, const value_type &t, const QJsonIOPath &path)
     {
         QList<std::tuple<QString, QJsonIOPathType, QJsonValue>> _stack;
-        QJsonValue lastNode;
+        QJsonValue lastNode = parent;
         for (const auto &[key, type] : path)
         {
+            _stack.prepend({ key, type, lastNode });
             if (type == QJsonIOPathType::JSONIO_MODE_ARRAY)
                 lastNode = lastNode.toArray()[key.toInt()];
             else
                 lastNode = lastNode.toObject()[key];
-            _stack.prepend({ key, type, lastNode });
         }
 
         lastNode = t;
@@ -161,7 +164,8 @@ class QJsonIO
             {
                 const auto index = key.toInt();
                 auto nodeArray = node.toArray();
-                for (auto i = nodeArray.size(); i <= index; i++) nodeArray.insert(i, {});
+                for (auto i = nodeArray.size(); i <= index; i++)
+                    nodeArray.insert(i, {});
                 nodeArray[index] = lastNode;
                 lastNode = nodeArray;
             }
