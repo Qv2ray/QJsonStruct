@@ -2,6 +2,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QList>
 #include <tuple>
 
 enum class QJsonIOPathType
