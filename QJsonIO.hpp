@@ -88,7 +88,7 @@ class QJsonIO
     {
         if constexpr (sizeof...(t_other_types) == 0)
             return parent[current];
-        else if constexpr (std::is_same<current_key_type, QJsonArray::size_type>::value)
+        else if constexpr (std::is_integral_v<current_key_type>)
             return GetValue(parent.toArray()[current], other...);
         else
             return GetValue(parent.toObject()[current], other...);
@@ -113,7 +113,7 @@ class QJsonIO
         // Means we have reached the end of recursion.
         if constexpr (sizeof...(t_other_key_types) == 0)
             parent[current] = val;
-        else if constexpr (std::is_same<typename std::tuple_element<0, std::tuple<t_other_key_types...>>::type, QJsonArray::size_type>::value)
+        else if constexpr (std::is_integral_v<typename std::tuple_element_t<0, std::tuple<t_other_key_types...>>>)
         {
             // Means we still have many keys
             // So this element is an array.
