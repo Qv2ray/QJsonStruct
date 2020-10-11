@@ -26,7 +26,11 @@ class has_tojson_func
 };
 
 //
-#define ___DESERIALIZE_FROM_JSON_CONVERT_F_FUNC(name) JsonStructHelper::Deserialize(this->name, ___json_object_[#name]);
+#define ___DESERIALIZE_FROM_JSON_CONVERT_F_FUNC(name)                                                                                                \
+    if (___json_object_.toObject().contains(#name))                                                                                                  \
+    {                                                                                                                                                \
+        JsonStructHelper::Deserialize(this->name, ___json_object_[#name]);                                                                           \
+    }
 //
 #define ___DESERIALIZE_FROM_JSON_CONVERT_B_FUNC(...) FOREACH_CALL_FUNC_3(___DESERIALIZE_FROM_JSON_CONVERT_B_FUNC_IMPL, __VA_ARGS__)
 #define ___DESERIALIZE_FROM_JSON_CONVERT_B_FUNC_IMPL(name) name::loadJson(___json_object_);
@@ -49,39 +53,37 @@ class has_tojson_func
 //
 #define ___SERIALIZE_TO_JSON_EXTRACT_B_F(name_option) ___SERIALIZE_TO_JSON_CONVERT_FUNC_DECL_##name_option
 
-#define JSONSTRUCT_REGISTER(___class_type_, ...)                                                                                                \
-    void loadJson(const QJsonValue &___json_object_)                                                                                            \
-    {                                                                                                                                           \
-        FOREACH_CALL_FUNC(___DESERIALIZE_FROM_JSON_EXTRACT_B_F, __VA_ARGS__);                                                                   \
-    }                                                                                                                                           \
-    [[nodiscard]] static auto fromJson(const QJsonValue &___json_object_)                                                                       \
-    {                                                                                                                                           \
-        ___class_type_ _t;                                                                                                                      \
-        _t.loadJson(___json_object_);                                                                                                           \
-        return _t;                                                                                                                              \
-    }                                                                                                                                           \
-    [[nodiscard]] const QJsonObject toJson() const                                                                                              \
-    {                                                                                                                                           \
-        QJsonObject ___json_object_;                                                                                                            \
-        FOREACH_CALL_FUNC(___SERIALIZE_TO_JSON_EXTRACT_B_F, __VA_ARGS__);                                                                       \
-        return ___json_object_;                                                                                                                 \
+#define JSONSTRUCT_REGISTER(___class_type_, ...)                                                                                                     \
+    void loadJson(const QJsonValue &___json_object_)                                                                                                 \
+    {                                                                                                                                                \
+        FOREACH_CALL_FUNC(___DESERIALIZE_FROM_JSON_EXTRACT_B_F, __VA_ARGS__);                                                                        \
+    }                                                                                                                                                \
+    [[nodiscard]] static auto fromJson(const QJsonValue &___json_object_)                                                                            \
+    {                                                                                                                                                \
+        ___class_type_ _t;                                                                                                                           \
+        _t.loadJson(___json_object_);                                                                                                                \
+        return _t;                                                                                                                                   \
+    }                                                                                                                                                \
+    [[nodiscard]] const QJsonObject toJson() const                                                                                                   \
+    {                                                                                                                                                \
+        QJsonObject ___json_object_;                                                                                                                 \
+        FOREACH_CALL_FUNC(___SERIALIZE_TO_JSON_EXTRACT_B_F, __VA_ARGS__);                                                                            \
+        return ___json_object_;                                                                                                                      \
     }
 
-#define ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(type, convert_func)                                                                           \
-    static void Deserialize(type &t, const QJsonValue &d)                                                                                       \
-    {                                                                                                                                           \
-        if (!d.isNull() && !d.isUndefined())                                                                                                    \
-            t = d.convert_func();                                                                                                               \
+#define ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(type, convert_func)                                                                                \
+    static void Deserialize(type &t, const QJsonValue &d)                                                                                            \
+    {                                                                                                                                                \
+        t = d.convert_func();                                                                                                                        \
     }
+
 class JsonStructHelper
 {
   public:
     static void MergeJson(QJsonObject &mergeTo, const QJsonObject &mergeIn)
     {
         for (const auto &key : mergeIn.keys())
-        {
             mergeTo[key] = mergeIn.value(key);
-        }
     }
     //
     template<typename T>
@@ -149,10 +151,10 @@ class JsonStructHelper
         else
             return t.toJson();
     }
-#define ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(type)                                                                                        \
-    static QJsonValue Serialize(const type &t)                                                                                                  \
-    {                                                                                                                                           \
-        return QJsonValue(t);                                                                                                                   \
+#define ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(type)                                                                                             \
+    static QJsonValue Serialize(const type &t)                                                                                                       \
+    {                                                                                                                                                \
+        return QJsonValue(t);                                                                                                                        \
     }
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(int);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(bool);
@@ -163,10 +165,10 @@ class JsonStructHelper
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(float);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(double);
     //
-#define ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(type)                                                                                  \
-    static QJsonValue Serialize(const type &t)                                                                                                  \
-    {                                                                                                                                           \
-        return QJsonValue((qint64) t);                                                                                                          \
+#define ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(type)                                                                                       \
+    static QJsonValue Serialize(const type &t)                                                                                                       \
+    {                                                                                                                                                \
+        return QJsonValue((qint64) t);                                                                                                               \
     }
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(long);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(unsigned long);
@@ -212,10 +214,10 @@ class JsonStructHelper
 
 #define __EXTRACT(n) , #n, n
 #define __CALL_X(json, ...) JsonStructHelper::Serialize(json FOREACH_CALL_FUNC(__EXTRACT, __VA_ARGS__))
-#define JSONSTRUCT_REGISTER_TOJSON(...)                                                                                                         \
-    [[nodiscard]] QJsonObject toJson() const                                                                                                    \
-    {                                                                                                                                           \
-        QJsonObject ___json_object;                                                                                                             \
-        __CALL_X(___json_object, __VA_ARGS__);                                                                                                  \
-        return ___json_object;                                                                                                                  \
+#define JSONSTRUCT_REGISTER_TOJSON(...)                                                                                                              \
+    [[nodiscard]] QJsonObject toJson() const                                                                                                         \
+    {                                                                                                                                                \
+        QJsonObject ___json_object;                                                                                                                  \
+        __CALL_X(___json_object, __VA_ARGS__);                                                                                                       \
+        return ___json_object;                                                                                                                       \
     }
