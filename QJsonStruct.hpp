@@ -53,22 +53,25 @@ class has_tojson_func
 //
 #define ___SERIALIZE_TO_JSON_EXTRACT_B_F(name_option) ___SERIALIZE_TO_JSON_CONVERT_FUNC_DECL_##name_option
 
-#define JSONSTRUCT_REGISTER(___class_type_, ...)                                                                                                     \
+#define JSONSTRUCT_REGISTER_NOCOPYMOVE(___class_type_, ...)                                                                                          \
     void loadJson(const QJsonValue &___json_object_)                                                                                                 \
     {                                                                                                                                                \
         FOREACH_CALL_FUNC(___DESERIALIZE_FROM_JSON_EXTRACT_B_F, __VA_ARGS__);                                                                        \
-    }                                                                                                                                                \
-    [[nodiscard]] static auto fromJson(const QJsonValue &___json_object_)                                                                            \
-    {                                                                                                                                                \
-        ___class_type_ _t;                                                                                                                           \
-        _t.loadJson(___json_object_);                                                                                                                \
-        return _t;                                                                                                                                   \
     }                                                                                                                                                \
     [[nodiscard]] const QJsonObject toJson() const                                                                                                   \
     {                                                                                                                                                \
         QJsonObject ___json_object_;                                                                                                                 \
         FOREACH_CALL_FUNC(___SERIALIZE_TO_JSON_EXTRACT_B_F, __VA_ARGS__);                                                                            \
         return ___json_object_;                                                                                                                      \
+    }
+
+#define JSONSTRUCT_REGISTER(___class_type_, ...)                                                                                                     \
+    JSONSTRUCT_REGISTER_NOCOPYMOVE(___class_type, __VA_ARGS__);                                                                                      \
+    [[nodiscard]] static auto fromJson(const QJsonValue &___json_object_)                                                                            \
+    {                                                                                                                                                \
+        ___class_type_ _t;                                                                                                                           \
+        _t.loadJson(___json_object_);                                                                                                                \
+        return _t;                                                                                                                                   \
     }
 
 #define ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(type, convert_func)                                                                                \
