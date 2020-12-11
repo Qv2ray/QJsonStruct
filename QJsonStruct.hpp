@@ -8,23 +8,6 @@
     #include <QVariant>
 #endif
 
-template<class C>
-class has_tojson_func
-{
-    template<class T>
-    static std::true_type testSignature(QJsonObject (T::*)() const);
-
-    template<class T>
-    static decltype(testSignature(&T::toJson)) test(std::nullptr_t);
-
-    template<class T>
-    static std::false_type test(...);
-
-  public:
-    using type = decltype(test<C>(nullptr));
-    static const bool value = type::value;
-};
-
 //
 #define ___DESERIALIZE_FROM_JSON_CONVERT_F_FUNC(name)                                                                                                \
     if (___json_object_.toObject().contains(#name))                                                                                                  \
@@ -42,7 +25,9 @@ class has_tojson_func
 //
 // =====================
 //
-#define ___SERIALIZE_TO_JSON_CONVERT_F_FUNC(name) ___json_object_.insert(#name, JsonStructHelper::Serialize(name));
+#define ___SERIALIZE_TO_JSON_CONVERT_F_FUNC(name)                                                                                                    \
+    if (___qjsonstruct_default_check.name != this->name)                                                                                             \
+        ___json_object_.insert(#name, JsonStructHelper::Serialize(name));
 //
 #define ___SERIALIZE_TO_JSON_CONVERT_B_FUNC_IMPL(name) JsonStructHelper::MergeJson(___json_object_, name::toJson());
 #define ___SERIALIZE_TO_JSON_CONVERT_B_FUNC(...) FOREACH_CALL_FUNC_3(___SERIALIZE_TO_JSON_CONVERT_B_FUNC_IMPL, __VA_ARGS__)
@@ -60,15 +45,17 @@ class has_tojson_func
     }                                                                                                                                                \
     [[nodiscard]] const QJsonObject toJson() const                                                                                                   \
     {                                                                                                                                                \
+        ___class_type_ ___qjsonstruct_default_check;                                                                                                 \
         QJsonObject ___json_object_;                                                                                                                 \
         FOREACH_CALL_FUNC(___SERIALIZE_TO_JSON_EXTRACT_B_F, __VA_ARGS__);                                                                            \
         return ___json_object_;                                                                                                                      \
     }
 
 #define JSONSTRUCT_REGISTER(___class_type_, ...)                                                                                                     \
-    JSONSTRUCT_REGISTER_NOCOPYMOVE(___class_type, __VA_ARGS__);                                                                                      \
+    JSONSTRUCT_REGISTER_NOCOPYMOVE(___class_type_, __VA_ARGS__);                                                                                     \
     [[nodiscard]] static auto fromJson(const QJsonValue &___json_object_)                                                                            \
     {                                                                                                                                                \
+        ___class_type_ ___qjsonstruct_default_check;                                                                                                 \
         ___class_type_ _t;                                                                                                                           \
         _t.loadJson(___json_object_);                                                                                                                \
         return _t;                                                                                                                                   \
@@ -77,7 +64,7 @@ class has_tojson_func
 #define ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(type, convert_func)                                                                                \
     static void Deserialize(type &t, const QJsonValue &d)                                                                                            \
     {                                                                                                                                                \
-        t = d.convert_func();                                                                                                                        \
+        t = d.convert_func;                                                                                                                          \
     }
 
 class JsonStructHelper
@@ -102,18 +89,19 @@ class JsonStructHelper
             t.loadJson(d);
     }
 
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(QString, toString);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(std::string, toString().toStdString);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(std::wstring, toString().toStdWString);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(bool, toBool);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(double, toDouble);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(float, toVariant().toFloat);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(int, toInt);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(long, toVariant().toLongLong);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(long long, toVariant().toLongLong);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned int, toVariant().toUInt);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned long, toVariant().toULongLong);
-    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned long long, toVariant().toULongLong);
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(QString, toString());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(QChar, toVariant().toChar());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(std::string, toString().toStdString());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(std::wstring, toString().toStdWString());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(bool, toBool());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(double, toDouble());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(float, toVariant().toFloat());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(int, toInt());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(long, toVariant().toLongLong());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(long long, toVariant().toLongLong());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned int, toVariant().toUInt());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned long, toVariant().toULongLong());
+    ___DECL_JSON_STRUCT_LOAD_SIMPLE_TYPE_FUNC(unsigned long long, toVariant().toULongLong());
 
     template<typename T>
     static void Deserialize(QList<T> &t, const QJsonValue &d)
@@ -149,11 +137,13 @@ class JsonStructHelper
     {
         if constexpr (std::is_enum<T>::value)
             return (int) t;
-        else if constexpr (std::is_same<T, QJsonObject>::value || std::is_same<T, QJsonArray>::value)
+        else if constexpr (std::is_same_v<T, QJsonObject> || std::is_same_v<T, QJsonArray>)
             return t;
         else
             return t.toJson();
     }
+
+#define pure_func(x) (x)
 #define ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(type)                                                                                             \
     static QJsonValue Serialize(const type &t)                                                                                                       \
     {                                                                                                                                                \
@@ -167,15 +157,19 @@ class JsonStructHelper
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(long long);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(float);
     ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC(double);
-    //
-#define ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(type)                                                                                       \
+
+#define ___DECL_JSON_STRUCT_STORE_VARIANT_TYPE_FUNC(type, func)                                                                                      \
     static QJsonValue Serialize(const type &t)                                                                                                       \
     {                                                                                                                                                \
-        return QJsonValue((qint64) t);                                                                                                               \
+        return QJsonValue::fromVariant(func);                                                                                                        \
     }
-    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(long);
-    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(unsigned long);
-    ___DECL_JSON_STRUCT_STORE_SIMPLE_TYPE_FUNC_EXTRA(unsigned long long);
+
+    ___DECL_JSON_STRUCT_STORE_VARIANT_TYPE_FUNC(std::string, QString::fromStdString(t))
+    ___DECL_JSON_STRUCT_STORE_VARIANT_TYPE_FUNC(std::wstring, QString::fromStdWString(t))
+    ___DECL_JSON_STRUCT_STORE_VARIANT_TYPE_FUNC(long, QVariant::fromValue<long>(t))
+    ___DECL_JSON_STRUCT_STORE_VARIANT_TYPE_FUNC(unsigned int, QVariant::fromValue<unsigned int>(t))
+    ___DECL_JSON_STRUCT_STORE_VARIANT_TYPE_FUNC(unsigned long, QVariant::fromValue<unsigned long>(t))
+    ___DECL_JSON_STRUCT_STORE_VARIANT_TYPE_FUNC(unsigned long long, QVariant::fromValue<unsigned long long>(t))
 
     template<typename TValue>
     static QJsonValue Serialize(const QMap<QString, TValue> &t)
@@ -199,28 +193,4 @@ class JsonStructHelper
         }
         return listObject;
     }
-
-    template<typename _tVAL, typename... _other>
-    static void Serialize(QJsonObject &o, const QString &key, const _tVAL &value, const _other &... others)
-    {
-        if constexpr (has_tojson_func<_tVAL>::value)
-        {
-            o[key] = value.toJson();
-        }
-        else
-        {
-            o[key] = JsonStructHelper::Serialize(value);
-        }
-        Serialize(o, others...);
-    }
 };
-
-#define __EXTRACT(n) , #n, n
-#define __CALL_X(json, ...) JsonStructHelper::Serialize(json FOREACH_CALL_FUNC(__EXTRACT, __VA_ARGS__))
-#define JSONSTRUCT_REGISTER_TOJSON(...)                                                                                                              \
-    [[nodiscard]] QJsonObject toJson() const                                                                                                         \
-    {                                                                                                                                                \
-        QJsonObject ___json_object;                                                                                                                  \
-        __CALL_X(___json_object, __VA_ARGS__);                                                                                                       \
-        return ___json_object;                                                                                                                       \
-    }
