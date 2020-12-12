@@ -9,9 +9,9 @@
 #endif
 
 /// macro to define an operator==
-#define ___JSONSTRUCT_DEFAULT_COMPARE_IMPL(x) left.x == right.x &&
+#define ___JSONSTRUCT_DEFAULT_COMPARE_IMPL(x) (this->x == ___another___instance__.x) &&
 #define JSONSTRUCT_COMPARE(CLASS, ...)                                                                                                               \
-    friend bool operator==(const CLASS &left, const CLASS &right)                                                                                    \
+    bool operator==(const CLASS &___another___instance__)                                                                                            \
     {                                                                                                                                                \
         return FOR_EACH(___JSONSTRUCT_DEFAULT_COMPARE_IMPL, __VA_ARGS__) true;                                                                       \
     }
