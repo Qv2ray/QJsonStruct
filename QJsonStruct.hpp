@@ -8,36 +8,51 @@
     #include <QVariant>
 #endif
 
-//
+/// macro to define an operator==
+#define ___JSONSTRUCT_DEFAULT_COMPARE_IMPL(x) left.x == right.x &&
+#define JSONSTRUCT_COMPARE(CLASS, ...)                                                                                                               \
+    friend bool operator==(const CLASS &left, const CLASS &right)                                                                                    \
+    {                                                                                                                                                \
+        return FOR_EACH(___JSONSTRUCT_DEFAULT_COMPARE_IMPL, __VA_ARGS__) true;                                                                       \
+    }
+
+// ============================================================================================
+// Load JSON IMPL
+#define ___DESERIALIZE_FROM_JSON_CONVERT_B_FUNC_IMPL(name) name::loadJson(___json_object_);
+#define ___DESERIALIZE_FROM_JSON_CONVERT_A_FUNC(name) ___DESERIALIZE_FROM_JSON_CONVERT_F_FUNC(name)
+#define ___DESERIALIZE_FROM_JSON_CONVERT_B_FUNC(...) FOREACH_CALL_FUNC_3(___DESERIALIZE_FROM_JSON_CONVERT_B_FUNC_IMPL, __VA_ARGS__)
 #define ___DESERIALIZE_FROM_JSON_CONVERT_F_FUNC(name)                                                                                                \
     if (___json_object_.toObject().contains(#name))                                                                                                  \
     {                                                                                                                                                \
         JsonStructHelper::Deserialize(this->name, ___json_object_[#name]);                                                                           \
     }
-//
-#define ___DESERIALIZE_FROM_JSON_CONVERT_B_FUNC(...) FOREACH_CALL_FUNC_3(___DESERIALIZE_FROM_JSON_CONVERT_B_FUNC_IMPL, __VA_ARGS__)
-#define ___DESERIALIZE_FROM_JSON_CONVERT_B_FUNC_IMPL(name) name::loadJson(___json_object_);
-//
-#define ___DESERIALIZE_FROM_JSON_CONVERT_FUNC_DECL_F(...) FOREACH_CALL_FUNC_2(___DESERIALIZE_FROM_JSON_CONVERT_F_FUNC, __VA_ARGS__)
-#define ___DESERIALIZE_FROM_JSON_CONVERT_FUNC_DECL_B(...) FOREACH_CALL_FUNC_2(___DESERIALIZE_FROM_JSON_CONVERT_B_FUNC, __VA_ARGS__)
-//
-#define ___DESERIALIZE_FROM_JSON_EXTRACT_B_F(name_option) ___DESERIALIZE_FROM_JSON_CONVERT_FUNC_DECL_##name_option
-//
-// =====================
-//
+
+// ============================================================================================
+// To JSON IMPL
 #define ___SERIALIZE_TO_JSON_CONVERT_F_FUNC(name)                                                                                                    \
-    if (___qjsonstruct_default_check.name != this->name)                                                                                             \
-        ___json_object_.insert(#name, JsonStructHelper::Serialize(name));
-//
+    if (!(___qjsonstruct_default_check.name == this->name))                                                                                          \
+    {                                                                                                                                                \
+        ___json_object_.insert(#name, JsonStructHelper::Serialize(name));                                                                            \
+    }
+#define ___SERIALIZE_TO_JSON_CONVERT_A_FUNC(name) ___json_object_.insert(#name, JsonStructHelper::Serialize(name));
 #define ___SERIALIZE_TO_JSON_CONVERT_B_FUNC_IMPL(name) JsonStructHelper::MergeJson(___json_object_, name::toJson());
 #define ___SERIALIZE_TO_JSON_CONVERT_B_FUNC(...) FOREACH_CALL_FUNC_3(___SERIALIZE_TO_JSON_CONVERT_B_FUNC_IMPL, __VA_ARGS__)
-//
-//
+
+// ============================================================================================
+// Load JSON Wrapper
+#define ___DESERIALIZE_FROM_JSON_CONVERT_FUNC_DECL_A(...) FOREACH_CALL_FUNC_2(___DESERIALIZE_FROM_JSON_CONVERT_A_FUNC, __VA_ARGS__)
+#define ___DESERIALIZE_FROM_JSON_CONVERT_FUNC_DECL_F(...) FOREACH_CALL_FUNC_2(___DESERIALIZE_FROM_JSON_CONVERT_F_FUNC, __VA_ARGS__)
+#define ___DESERIALIZE_FROM_JSON_CONVERT_FUNC_DECL_B(...) FOREACH_CALL_FUNC_2(___DESERIALIZE_FROM_JSON_CONVERT_B_FUNC, __VA_ARGS__)
+#define ___DESERIALIZE_FROM_JSON_EXTRACT_B_F(name_option) ___DESERIALIZE_FROM_JSON_CONVERT_FUNC_DECL_##name_option
+
+// ============================================================================================
+// To JSON Wrapper
+#define ___SERIALIZE_TO_JSON_CONVERT_FUNC_DECL_A(...) FOREACH_CALL_FUNC_2(___SERIALIZE_TO_JSON_CONVERT_A_FUNC, __VA_ARGS__)
 #define ___SERIALIZE_TO_JSON_CONVERT_FUNC_DECL_F(...) FOREACH_CALL_FUNC_2(___SERIALIZE_TO_JSON_CONVERT_F_FUNC, __VA_ARGS__)
 #define ___SERIALIZE_TO_JSON_CONVERT_FUNC_DECL_B(...) FOREACH_CALL_FUNC_2(___SERIALIZE_TO_JSON_CONVERT_B_FUNC, __VA_ARGS__)
-//
 #define ___SERIALIZE_TO_JSON_EXTRACT_B_F(name_option) ___SERIALIZE_TO_JSON_CONVERT_FUNC_DECL_##name_option
 
+// ============================================================================================
 #define JSONSTRUCT_REGISTER_NOCOPYMOVE(___class_type_, ...)                                                                                          \
     void loadJson(const QJsonValue &___json_object_)                                                                                                 \
     {                                                                                                                                                \
@@ -55,7 +70,6 @@
     JSONSTRUCT_REGISTER_NOCOPYMOVE(___class_type_, __VA_ARGS__);                                                                                     \
     [[nodiscard]] static auto fromJson(const QJsonValue &___json_object_)                                                                            \
     {                                                                                                                                                \
-        ___class_type_ ___qjsonstruct_default_check;                                                                                                 \
         ___class_type_ _t;                                                                                                                           \
         _t.loadJson(___json_object_);                                                                                                                \
         return _t;                                                                                                                                   \
@@ -79,11 +93,11 @@ class JsonStructHelper
     template<typename T>
     static void Deserialize(T &t, const QJsonValue &d)
     {
-        if constexpr (std::is_enum<T>::value)
+        if constexpr (std::is_enum_v<T>)
             t = (T) d.toInt();
-        else if constexpr (std::is_same<T, QJsonObject>::value)
+        else if constexpr (std::is_same_v<T, QJsonObject>)
             t = d.toObject();
-        else if constexpr (std::is_same<T, QJsonArray>::value)
+        else if constexpr (std::is_same_v<T, QJsonArray>)
             t = d.toArray();
         else
             t.loadJson(d);
@@ -135,7 +149,7 @@ class JsonStructHelper
     template<typename T>
     static QJsonValue Serialize(const T &t)
     {
-        if constexpr (std::is_enum<T>::value)
+        if constexpr (std::is_enum_v<T>)
             return (int) t;
         else if constexpr (std::is_same_v<T, QJsonObject> || std::is_same_v<T, QJsonArray>)
             return t;
