@@ -25,6 +25,10 @@
     if (___json_object_.toObject().contains(#name))                                                                                                  \
     {                                                                                                                                                \
         JsonStructHelper::Deserialize(this->name, ___json_object_[#name]);                                                                           \
+    }                                                                                                                                                \
+    else                                                                                                                                             \
+    {                                                                                                                                                \
+        this->name = ___qjsonstruct_default_check.name;                                                                                              \
     }
 
 // ============================================================================================
@@ -56,6 +60,7 @@
 #define JSONSTRUCT_REGISTER_NOCOPYMOVE(___class_type_, ...)                                                                                          \
     void loadJson(const QJsonValue &___json_object_)                                                                                                 \
     {                                                                                                                                                \
+        ___class_type_ ___qjsonstruct_default_check;                                                                                                 \
         FOREACH_CALL_FUNC(___DESERIALIZE_FROM_JSON_EXTRACT_B_F, __VA_ARGS__);                                                                        \
     }                                                                                                                                                \
     [[nodiscard]] const QJsonObject toJson() const                                                                                                   \
