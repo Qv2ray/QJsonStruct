@@ -120,11 +120,20 @@ SCENARIO("Test Serialization", "[Serialize]")
             {
                 class NestedChild
                 {
+                    class NestedChild2
+                    {
+                      public:
+                        int childChildInt = 13579;
+                        JSONSTRUCT_COMPARE(NestedChild2, childChildInt)
+                        JSONSTRUCT_REGISTER(NestedChild2, F(childChildInt))
+                    };
+
                   public:
                     int childInt = 54321;
                     QString childQString = "A QString";
-                    JSONSTRUCT_COMPARE(NestedChild, childInt, childQString)
-                    JSONSTRUCT_REGISTER(NestedChild, F(childInt, childQString))
+                    NestedChild2 anotherChild;
+                    JSONSTRUCT_COMPARE(NestedChild, childInt, childQString, anotherChild)
+                    JSONSTRUCT_REGISTER(NestedChild, F(childInt, childQString, anotherChild))
                 };
 
               public:
@@ -150,6 +159,22 @@ SCENARIO("Test Serialization", "[Serialize]")
                 REQUIRE(json["parentInt"] == QJsonValue::Undefined);
                 REQUIRE(json["child"] == childJson);
                 REQUIRE(json["child"]["childInt"] == 1314);
+                REQUIRE(json["child"]["childQString"] == QJsonValue::Undefined);
+                REQUIRE(json["child"]["child"]["anotherChild"] == QJsonValue::Undefined);
+            }
+
+            WHEN("Omitted one element in the child child")
+            {
+                Parent parent;
+                parent.child.childInt = 1314;
+                parent.child.anotherChild.childChildInt = 97531;
+                const auto json = parent.toJson();
+                REQUIRE(json["parentInt"] == QJsonValue::Undefined);
+                REQUIRE(json["child"]["childInt"] == 1314);
+                REQUIRE(json["child"]["childQString"] == QJsonValue::Undefined);
+                const QJsonObject childChild{ { "childChildInt", 97531 } };
+                REQUIRE(json["child"]["anotherChild"] == childChild);
+                REQUIRE(json["child"]["anotherChild"]["childChildInt"] == 97531);
             }
         }
     }
