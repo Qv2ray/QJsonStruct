@@ -84,10 +84,13 @@ class QJsonIO
     const static inline QJsonValue Undefined = QJsonValue::Undefined;
 
     template<typename current_key_type, typename... t_other_types>
-    static QJsonValue GetValue(const QJsonValue &parent, const current_key_type &current, const t_other_types &... other)
+    static QJsonValue GetValue(const QJsonValue &parent, const current_key_type &current, const t_other_types &...other)
     {
         if constexpr (sizeof...(t_other_types) == 0)
-            return parent[current];
+            if constexpr (std::is_integral_v<current_key_type>)
+                return parent.toArray()[current];
+            else
+                return parent.toObject()[current];
         else if constexpr (std::is_integral_v<current_key_type>)
             return GetValue(parent.toArray()[current], other...);
         else
@@ -97,15 +100,15 @@ class QJsonIO
     template<typename... key_types_t>
     static QJsonValue GetValue(QJsonValue value, const std::tuple<key_types_t...> &keys, const QJsonValue &defaultValue = Undefined)
     {
-        std::apply([&](auto &&... args) { ((value = value[args]), ...); }, keys);
+        std::apply([&](auto &&...args) { ((value = value[args]), ...); }, keys);
         return value.isUndefined() ? defaultValue : value;
     }
 
     template<typename parent_type, typename t_value_type, typename current_key_type, typename... t_other_key_types>
-    static void SetValue(parent_type &parent, const t_value_type &val, const current_key_type &current, const t_other_key_types &... other)
+    static void SetValue(parent_type &parent, const t_value_type &val, const current_key_type &current, const t_other_key_types &...other)
     {
         // If current parent is an array, increase its size to fit the "key"
-        if constexpr (std::is_same<current_key_type, QJsonArray::size_type>::value)
+        if constexpr (std::is_same_v<current_key_type, QJsonArray::size_type>)
             for (auto i = parent.size(); i <= current; i++)
                 parent.insert(i, {});
 

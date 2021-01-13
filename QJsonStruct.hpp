@@ -24,7 +24,7 @@
 #define ___DESERIALIZE_FROM_JSON_CONVERT_F_FUNC(name)                                                                                                \
     if (___json_object_.toObject().contains(#name))                                                                                                  \
     {                                                                                                                                                \
-        JsonStructHelper::Deserialize(this->name, ___json_object_[#name]);                                                                           \
+        JsonStructHelper::Deserialize(this->name, ___json_object_.toObject()[#name]);                                                                \
     }                                                                                                                                                \
     else                                                                                                                                             \
     {                                                                                                                                                \
