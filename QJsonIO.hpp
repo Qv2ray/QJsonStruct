@@ -108,7 +108,7 @@ class QJsonIO
     static void SetValue(parent_type &parent, const t_value_type &val, const current_key_type &current, const t_other_key_types &...other)
     {
         // If current parent is an array, increase its size to fit the "key"
-        if constexpr (std::is_same_v<current_key_type, QJsonArray::size_type>)
+        if constexpr (std::is_integral_v<current_key_type>)
             for (auto i = parent.size(); i <= current; i++)
                 parent.insert(i, {});
 
