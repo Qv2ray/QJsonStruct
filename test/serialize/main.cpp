@@ -1,23 +1,27 @@
 #include "QJsonStruct.hpp"
+
+#include <QObject>
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
+#include "main.moc"
 
 const static inline auto INT_TEST_MAX = std::numeric_limits<int>::max() - 1;
 const static inline auto INT_TEST_MIN = -(std::numeric_limits<int>::min() + 1);
 
 #define SINGLE_ELEMENT_CLASS_DECL(CLASS, TYPE, field, defaultvalue, existance)                                                                       \
-    class CLASS                                                                                                                                      \
+    class CLASS : public QObject                                                                                                                     \
     {                                                                                                                                                \
+        Q_OBJECT                                                                                                                                     \
       public:                                                                                                                                        \
-        TYPE field = defaultvalue;                                                                                                                   \
-        JSONSTRUCT_REGISTER(CLASS, existance(field));                                                                                                \
+        JS_DECLARE_PROP_##existance(TYPE, field, defaultvalue);                                                                                      \
+        JS_REGISTER(CLASS, (), (field), JSON_F, CCTOR, DCTOR, COMPARE_F);                                                                            \
     };
 
 // SINGLE_ELEMENT_REQUIRE( CLASS_NAME , TYPE , FIELD , DEFAULT_VALUE , SET VALUE , CHECK VALUE )
 #define SINGLE_ELEMENT_REQUIRE(CLASS, TYPE, field, defaultvalue, value, checkvalue, existance)                                                       \
     SINGLE_ELEMENT_CLASS_DECL(CLASS, TYPE, field, defaultvalue, existance);                                                                          \
     CLASS CLASS##_class;                                                                                                                             \
-    CLASS##_class.field = value;                                                                                                                     \
+    CLASS##_class.set_##field(value);                                                                                                                \
     REQUIRE(CLASS##_class.toJson()[#field] == checkvalue);
 
 using namespace std;
@@ -34,7 +38,7 @@ SCENARIO("Test Serialization", "[Serialize]")
             const static QStringQStringMap setValueMap{ { "newkey1", "newvalue1" } };
             const static QJsonObject setValueJson{ { "newkey1", QJsonValue{ "newvalue1" } } };
 
-            SINGLE_ELEMENT_REQUIRE(QStringTest_Empty, QString, a, "empty", "", "", F);
+            SINGLE_ELEMENT_CLASS_DECL(QStringTest_Empty, QString, a, "empty", O)
             SINGLE_ELEMENT_REQUIRE(QStringTest, QString, a, "empty", "Some QString", "Some QString", F);
             SINGLE_ELEMENT_REQUIRE(QStringTest_WithQoutes, QString, a, "empty", "\"", "\"", F);
             SINGLE_ELEMENT_REQUIRE(QStringTest_zint, int, a, -10, 0, 0, F);
@@ -64,10 +68,10 @@ SCENARIO("Test Serialization", "[Serialize]")
         {
             const static QJsonArray defaultListJson{ "entry 1", "entry 2" };
             const static QJsonObject defaultMapJson{ { "key1", "value1" }, { "key2", "value2" } };
-            SINGLE_ELEMENT_REQUIRE(DefaultQString, QString, a, "defaultvalue", "defaultvalue", "defaultvalue", A);
-            SINGLE_ELEMENT_REQUIRE(DefaultInteger, int, a, 12345, 12345, 12345, A);
-            SINGLE_ELEMENT_REQUIRE(DefaultList, QList<QString>, a, defaultList, defaultList, defaultListJson, A);
-            SINGLE_ELEMENT_REQUIRE(DefaultMap, QStringQStringMap, a, defaultMap, defaultMap, defaultMapJson, A);
+            SINGLE_ELEMENT_REQUIRE(DefaultQString, QString, a, "defaultvalue", "defaultvalue", "defaultvalue", );
+            SINGLE_ELEMENT_REQUIRE(DefaultInteger, int, a, 12345, 12345, 12345, );
+            SINGLE_ELEMENT_REQUIRE(DefaultList, QList<QString>, a, defaultList, defaultList, defaultListJson, );
+            SINGLE_ELEMENT_REQUIRE(DefaultMap, QStringQStringMap, a, defaultMap, defaultMap, defaultMapJson, );
         }
     }
 

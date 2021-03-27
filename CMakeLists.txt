@@ -13,6 +13,10 @@ option(BUILD_TESTING ON)
 include(QJsonStruct.cmake)
 find_package(Qt5 COMPONENTS Core REQUIRED)
 
+add_executable(main main.cpp header.hpp QJsonStruct.hpp QJsonIO.hpp macroexpansion.hpp JsonConvertMacros.hpp QJsonStructBase.hpp ConstructorMacros.hpp CompareMacros.hpp)
+
+target_link_libraries(main Qt5::Core)
+
 if(BUILD_TESTING)
     include(CTest)
     add_subdirectory(test)
