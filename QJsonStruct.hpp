@@ -3,10 +3,12 @@
 #include "CompareMacros.hpp"
 #include "JsonConvertMacros.hpp"
 
+JS_MACRO_ARGUMENT_NO_WARN
+#include <QMutex>
 #include <QProperty>
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    #error "QJsonStruct does not support Qt version lesser than 6.0.0."
+#error "QJsonStruct does not support Qt version lesser than 6.0.0."
 #endif
 
 #define _QJS_PROP_OPTIONAL
@@ -17,14 +19,14 @@
 // QJsonStruct Public APIS
 //
 // ========================================================================================================
-
-#define QJS_PROP(TYPE, NAME, DEFAULT, EXTRA)                                                                                                         \
+#define QJS_PROP(TYPE, NAME, DEFAULT, ...)                                                                                                           \
+                                                                                                                                                     \
   private:                                                                                                                                           \
     TYPE JS_F(NAME) = (DEFAULT);                                                                                                                     \
     const TYPE __default__##NAME = (DEFAULT);                                                                                                        \
                                                                                                                                                      \
   public:                                                                                                                                            \
-    Q_PROPERTY(TYPE NAME MEMBER JS_F(NAME) RESET reset_##NAME _QJS_PROP_##EXTRA)                                                                     \
+    Q_PROPERTY(TYPE NAME MEMBER JS_F(NAME) RESET reset_##NAME __VA_ARGS__)                                                                           \
     QProperty<TYPE> p##NAME = QProperty<TYPE>([this]() { return _##NAME; });                                                                         \
     void set_##NAME(const TYPE _new)                                                                                                                 \
     {                                                                                                                                                \
@@ -66,20 +68,27 @@
     {                                                                                                                                                \
         target->setProperty(#target_prop, source.p##source_prop.value());                                                                            \
         const auto lambda = [this]() { target->setProperty(#target_prop, source.p##source_prop.value()); };                                          \
-        pch.push_back(source.p##source_prop.onValueChanged(std::function{ lambda }));                                                                \
+        __qjs_binding_list.push_back(source.p##source_prop.onValueChanged(std::function{ lambda }));                                                 \
     } while (false)
 
 #define QJS_WBINDING(source, source_prop, target, target_prop, target_slot)                                                                          \
     do                                                                                                                                               \
     {                                                                                                                                                \
         connect(target, target_slot, [this]() {                                                                                                      \
-            if (!x.tryLock())                                                                                                                        \
+            if (!__qjs_binding_lock.tryLock())                                                                                                       \
                 return;                                                                                                                              \
             this->source.set_##source_prop(target->target_prop());                                                                                   \
-            x.unlock();                                                                                                                              \
+            __qjs_binding_lock.unlock();                                                                                                             \
         });                                                                                                                                          \
     } while (false)
 
 #define QJS_RWBINDING(source, source_prop, target, target_prop, target_slot)                                                                         \
     QJS_RBINDING(source, source_prop, target, target_prop);                                                                                          \
     QJS_WBINDING(source, source_prop, target, target_prop, target_slot);
+
+#define QJS_BINDING_HELPERS                                                                                                                          \
+  private:                                                                                                                                           \
+    typedef QPropertyChangeHandler<std::function<void()>> __qjs_binding_;                                                                            \
+    QMutex __qjs_binding_lock;                                                                                                                       \
+    std::list<__qjs_binding_> __qjs_binding_list;
+#define QJS_CLEAR_BINDINGS __qjs_binding_list.clear();
