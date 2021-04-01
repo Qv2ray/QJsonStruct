@@ -9,8 +9,8 @@
     #error "QJsonStruct does not support Qt version lesser than 6.0.0."
 #endif
 
-#define _QJS_PROP_OPTIONAL false
-#define _QJS_PROP_REQUIRED true
+#define _QJS_PROP_OPTIONAL
+#define _QJS_PROP_REQUIRED REQUIRED
 
 // ========================================================================================================
 //
@@ -22,9 +22,9 @@
   private:                                                                                                                                           \
     TYPE JS_F(NAME) = (DEFAULT);                                                                                                                     \
     const TYPE __default__##NAME = (DEFAULT);                                                                                                        \
-    constexpr static bool prop_##NAME##_required = _QJS_PROP_##EXTRA;                                                                                \
                                                                                                                                                      \
   public:                                                                                                                                            \
+    Q_PROPERTY(TYPE NAME MEMBER JS_F(NAME) RESET reset_##NAME _QJS_PROP_##EXTRA)                                                                     \
     QProperty<TYPE> p##NAME = QProperty<TYPE>([this]() { return _##NAME; });                                                                         \
     void set_##NAME(const TYPE _new)                                                                                                                 \
     {                                                                                                                                                \
@@ -38,6 +38,10 @@
     TYPE &NAME()                                                                                                                                     \
     {                                                                                                                                                \
         return JS_F(NAME);                                                                                                                           \
+    }                                                                                                                                                \
+    void reset_##NAME()                                                                                                                              \
+    {                                                                                                                                                \
+        set_##NAME(__default__##NAME);                                                                                                               \
     }
 
 #define QJS_CONSTRUCTOR(CLASS)                                                                                                                       \

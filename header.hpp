@@ -6,15 +6,19 @@
 
 struct ChildObject
 {
+    Q_GADGET
   public:
     QJS_CONSTRUCTOR(ChildObject)
+
     QJS_PROP(QString, childString, "", OPTIONAL)
     QJS_PROP(int, childInt, 0, REQUIRED)
+
     QJS_FUNCTION(F(childString, childInt))
 };
 
 struct myStruct
 {
+    Q_GADGET
     typedef QMap<QString, QString> stringmap;
 
   public:

@@ -23,7 +23,7 @@
 
 #define __TOJSON_B(base) JsonStructHelper::MergeJson(___json_object_, base::toJson());
 #define __TOJSON_F(name)                                                                                                                             \
-    if (this->prop_##name##_required || !(name() == this->__default__##name))                                                                        \
+    if (staticMetaObject.property(staticMetaObject.indexOfProperty(#name)).isRequired() || !(name() == this->__default__##name))                     \
     {                                                                                                                                                \
         ___json_object_.insert(#name, JsonStructHelper::Serialize(this->_##name));                                                                   \
     }
