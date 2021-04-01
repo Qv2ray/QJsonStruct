@@ -1,17 +1,13 @@
 #include "header.hpp"
+#include "testform.hpp"
 
-#include <QCoreApplication>
+#include <QApplication>
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication app(argc, argv);
+    QApplication app(argc, argv);
+    TestForm f;
+    f.show();
 
-    MyObject2 o2;
-    o2.xxx().set_xx(1);
-    o2.lists().append("Test");
-    const auto j = o2.toJson();
-
-    const auto o22 = o2;
-
-    return 0;
+    return app.exec();
 }

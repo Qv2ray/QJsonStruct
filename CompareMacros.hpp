@@ -2,25 +2,22 @@
 
 #include "macroexpansion.hpp"
 
-#define _COMPARE_F_IMPL(x) (this->_##x == ___another___instance__._##x) &&
-#define _COMPARE_B_IMPL(b) ((b) * this == (b) _another) &&
-
-#define JS_COMPARE_F(CLASS, bs, fs)                                                                                                                  \
-    bool operator==(const CLASS &___another___instance__) const                                                                                      \
+#define QJS_FUNC_COMPARE(...)                                                                                                                        \
+  public:                                                                                                                                            \
+    bool operator==(const this_type_t &___another___instance__) const                                                                                \
     {                                                                                                                                                \
-        return FOR_EACH(_COMPARE_F_IMPL, ESC fs) true;                                                                                               \
+        QJsonObject ___json_object_;                                                                                                                 \
+        return FOR_EACH(_QJS_COMPARE_BF, __VA_ARGS__) true;                                                                                          \
     }                                                                                                                                                \
-    bool operator!=(const CLASS &_another) const                                                                                                     \
+    bool operator!=(const this_type_t &_another) const                                                                                               \
     {                                                                                                                                                \
         return !(*this == _another);                                                                                                                 \
     }
 
-#define JS_COMPARE_FB(CLASS, bs, fs)                                                                                                                 \
-    bool operator==(const CLASS &___another___instance__) const                                                                                      \
-    {                                                                                                                                                \
-        return FOR_EACH(_COMPARE_B_IMPL, PASS_PARAMETERS(bs)) FOR_EACH(_COMPARE_F_IMPL, ESC fs) true;                                                \
-    }                                                                                                                                                \
-    bool operator!=(const CLASS &_another) const                                                                                                     \
-    {                                                                                                                                                \
-        return !(*this == _another);                                                                                                                 \
-    }
+// ============================================================================================
+#define _QJS_COMPARE_F(...) FOR_EACH_2(__COMPARE_F, __VA_ARGS__)
+#define _QJS_COMPARE_B(...) FOR_EACH_2(__COMPARE_B, __VA_ARGS__)
+#define _QJS_COMPARE_BF(option) _QJS_COMPARE_##option
+
+#define __COMPARE_F(name) (this->name() == ___another___instance__.name()) &&
+#define __COMPARE_B(base) ((base) * this == (base) _another) &&

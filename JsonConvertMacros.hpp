@@ -1,56 +1,54 @@
 #pragma once
 #include "QJsonStructBase.hpp"
+#include "macroexpansion.hpp"
 
-#ifndef _JSONSTRUCT_DEBUG
-    #include <QJsonArray>
-    #include <QJsonObject>
-    #include <QList>
-    #include <QMetaProperty>
-    #include <QVariant>
-#endif
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QList>
+#include <QMetaProperty>
+#include <QVariant>
+
+// ============================================================================================
+// Load JSON Wrapper
+#define _QJS_FROM_JSON_F(...) FOR_EACH_2(__FROMJSON_F, __VA_ARGS__)
+#define _QJS_FROM_JSON_B(...) FOR_EACH_2(__FROMJSON_B, __VA_ARGS__)
+#define _QJS_FROM_JSON_BF(option) _QJS_FROM_JSON_##option
+
+// ============================================================================================
+// To JSON Wrapper
+#define _QJS_TO_JSON_F(...) FOR_EACH_2(__TOJSON_F, __VA_ARGS__)
+#define _QJS_TO_JSON_B(...) FOR_EACH_2(__TOJSON_B, __VA_ARGS__)
+#define _QJS_TO_JSON_BF(option) _QJS_TO_JSON_##option
+// =========================================================================================================
 
 #define __TOJSON_B(base) JsonStructHelper::MergeJson(___json_object_, base::toJson());
 #define __TOJSON_F(name)                                                                                                                             \
-    if (this->metaObject()->property(this->metaObject()->indexOfProperty(#name)).isRequired() ||                                                     \
-        !(this->property(#name).value<decltype(QJSONSTRUCT_FIELD(name))>() == this->__default__##name))                                              \
+    if (this->prop_##name##_required || !(name() == this->__default__##name))                                                                        \
     {                                                                                                                                                \
-        ___json_object_.insert(#name, JsonStructHelper::Serialize(QJSONSTRUCT_FIELD(name)));                                                         \
+        ___json_object_.insert(#name, JsonStructHelper::Serialize(this->_##name));                                                                   \
     }
 
-#define __FROMJSON_B(base) base::loadJson(___json_object_);
+#define __FROMJSON_B(name) name::loadJson(___json_object_);
 #define __FROMJSON_F(name)                                                                                                                           \
     if (___json_object_.toObject().contains(#name))                                                                                                  \
         JsonStructHelper::Deserialize(this->_##name, ___json_object_.toObject()[#name]);                                                             \
     else                                                                                                                                             \
         this->_##name = this->__default__##name;                                                                                                     \
-    on_##name##_changed(this->_##name);
+    this->p##name.markDirty();
 
 // ========================================================================================================= Public
 
-#define JS_JSON_BF(_, b, f)                                                                                                                          \
+#define QJS_FUNC_JSON(...)                                                                                                                           \
+  public:                                                                                                                                            \
     QJsonObject toJson() const                                                                                                                       \
     {                                                                                                                                                \
         QJsonObject ___json_object_;                                                                                                                 \
-        FOREACH_CALL_FUNC(__TOJSON_B, ESC b)                                                                                                         \
-        FOREACH_CALL_FUNC(__TOJSON_F, ESC f)                                                                                                         \
+        FOR_EACH(_QJS_TO_JSON_BF, __VA_ARGS__)                                                                                                       \
         return ___json_object_;                                                                                                                      \
     }                                                                                                                                                \
     void loadJson(const QJsonValue &___json_object_)                                                                                                 \
     {                                                                                                                                                \
-        FOREACH_CALL_FUNC(FROMJSON_B, ESC b)                                                                                                         \
-        FOREACH_CALL_FUNC(FROMJSON_F, ESC f)                                                                                                         \
-    }
-
-#define JS_JSON_F(_, b, f)                                                                                                                           \
-    QJsonObject toJson() const                                                                                                                       \
-    {                                                                                                                                                \
-        QJsonObject ___json_object_;                                                                                                                 \
-        FOREACH_CALL_FUNC(__TOJSON_F, ESC f)                                                                                                         \
-        return ___json_object_;                                                                                                                      \
-    }                                                                                                                                                \
-    void loadJson(const QJsonValue &___json_object_)                                                                                                 \
-    {                                                                                                                                                \
-        FOREACH_CALL_FUNC(__FROMJSON_F, ESC f)                                                                                                       \
+        FOR_EACH(_QJS_FROM_JSON_BF, __VA_ARGS__)                                                                                                     \
     }
 
 class JsonStructHelper
@@ -141,7 +139,7 @@ class JsonStructHelper
 #define STORE_SIMPLE_FUNC(type)                                                                                                                      \
     static QJsonValue Serialize(const type &t)                                                                                                       \
     {                                                                                                                                                \
-        return QJsonValue(t);                                                                                                                        \
+        return { t };                                                                                                                                \
     }
     STORE_SIMPLE_FUNC(int);
     STORE_SIMPLE_FUNC(bool);

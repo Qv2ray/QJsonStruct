@@ -31,7 +31,6 @@
 #define FOR_EACH_WITH1_16(what, with, x, ...) what(with, x) EXPAND(FOR_EACH_WITH1_15(what, with, __VA_ARGS__))
 #define FOR_EACH_WITH1_(N, what, with, ...) EXPAND(CONCATENATE(FOR_EACH_WITH1_, N)(what, with, __VA_ARGS__))
 #define FOR_EACH_WITH1(what, with, ...) FOR_EACH_WITH1_(FOR_EACH_NARG(__VA_ARGS__), what, with, __VA_ARGS__)
-#define FOREACH_CALL_FUNC_WITH(what, with, ...) FOR_EACH_WITH1(what, with, __VA_ARGS__)
 
 // Bad hack ==========================================================================================================================
 
@@ -53,7 +52,6 @@
 #define FOR_EACH_WITH2_16(what, w1, w2, x, ...) what(w1, w2, x) EXPAND(FOR_EACH_WITH2_15(what, w1, w2, __VA_ARGS__))
 #define FOR_EACH_WITH2_(N, what, w1, w2, ...) EXPAND(CONCATENATE(FOR_EACH_WITH2_, N)(what, w1, w2, __VA_ARGS__))
 #define FOR_EACH_WITH2(what, w1, w2, ...) FOR_EACH_WITH2_(FOR_EACH_NARG(__VA_ARGS__), what, w1, w2, __VA_ARGS__)
-#define FOREACH_CALL_FUNC_WITH2(what, w1, w2, ...) FOR_EACH_WITH2(what, w1, w2, __VA_ARGS__)
 
 // Bad hack ==========================================================================================================================
 
@@ -75,10 +73,9 @@
 #define FOR_EACH_WITH3_16(what, w1, w2, w3, x, ...) what(w1, w2, w3, x) EXPAND(FOR_EACH_WITH3_15(what, w1, w2, w3, __VA_ARGS__))
 #define FOR_EACH_WITH3_(N, what, w1, w2, w3, ...) EXPAND(CONCATENATE(FOR_EACH_WITH3_, N)(what, w1, w2, w3, __VA_ARGS__))
 #define FOR_EACH_WITH3(what, w1, w2, w3, ...) FOR_EACH_WITH3_(FOR_EACH_NARG(__VA_ARGS__), what, w1, w2, w3, __VA_ARGS__)
-#define FOREACH_CALL_FUNC_WITH3(what, w1, w2, w3, ...) FOR_EACH_WITH3(what, w1, w2, w3, __VA_ARGS__)
+
 // Bad hack ==========================================================================================================================
 
-#define FOR_EACH_00(...)
 #define FOR_EACH_01(what, x, ...) what(x)
 #define FOR_EACH_02(what, x, ...) what(x) EXPAND(FOR_EACH_01(what, __VA_ARGS__))
 #define FOR_EACH_03(what, x, ...) what(x) EXPAND(FOR_EACH_02(what, __VA_ARGS__))
@@ -98,7 +95,6 @@
 
 #define FOR_EACH_(N, what, ...) EXPAND(CONCATENATE(FOR_EACH_, N)(what, __VA_ARGS__))
 #define FOR_EACH(what, ...) FOR_EACH_(FOR_EACH_NARG(__VA_ARGS__), what, __VA_ARGS__)
-#define FOREACH_CALL_FUNC(what, ...) FOR_EACH(what, __VA_ARGS__)
 
 // Bad hack ==========================================================================================================================
 #define _2X_FOR_EACH_01(what, x, ...) what(x)
@@ -119,7 +115,7 @@
 #define _2X_FOR_EACH_16(what, x, ...) what(x) EXPAND(_2X_FOR_EACH_15(what, __VA_ARGS__))
 #define _2X_FOR_EACH_(N, what, ...) EXPAND(CONCATENATE(_2X_FOR_EACH_, N)(what, __VA_ARGS__))
 #define _2X_FOR_EACH(what, ...) _2X_FOR_EACH_(FOR_EACH_NARG(__VA_ARGS__), what, __VA_ARGS__)
-#define FOREACH_CALL_FUNC_2(what, ...) _2X_FOR_EACH(what, __VA_ARGS__)
+#define FOR_EACH_2(what, ...) _2X_FOR_EACH(what, __VA_ARGS__)
 
 // Bad hack ==========================================================================================================================
 #define _3X_FOR_EACH_01(what, x, ...) what(x)
@@ -140,4 +136,4 @@
 #define _3X_FOR_EACH_16(what, x, ...) what(x) EXPAND(_3X_FOR_EACH_15(what, __VA_ARGS__))
 #define _3X_FOR_EACH_(N, what, ...) EXPAND(CONCATENATE(_3X_FOR_EACH_, N)(what, __VA_ARGS__))
 #define _3X_FOR_EACH(what, ...) _3X_FOR_EACH_(FOR_EACH_NARG(__VA_ARGS__), what, __VA_ARGS__)
-#define FOREACH_CALL_FUNC_3(what, ...) _3X_FOR_EACH(what, __VA_ARGS__)
+#define FOR_EACH_3(what, ...) _3X_FOR_EACH(what, __VA_ARGS__)
