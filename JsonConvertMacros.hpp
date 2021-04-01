@@ -23,17 +23,17 @@
 
 #define __TOJSON_B(base) JsonStructHelper::MergeJson(___json_object_, base::toJson());
 #define __TOJSON_F(name)                                                                                                                             \
-    if (staticMetaObject.property(staticMetaObject.indexOfProperty(#name)).isRequired() || !(name() == this->__default__##name))                     \
+    if (staticMetaObject.property(staticMetaObject.indexOfProperty(#name)).isRequired() || !(name == this->__default__##name))                       \
     {                                                                                                                                                \
-        ___json_object_.insert(#name, JsonStructHelper::Serialize(this->_##name));                                                                   \
+        ___json_object_.insert(#name, JsonStructHelper::Serialize(this->JS_F(name)));                                                                \
     }
 
 #define __FROMJSON_B(name) name::loadJson(___json_object_);
 #define __FROMJSON_F(name)                                                                                                                           \
     if (___json_object_.toObject().contains(#name))                                                                                                  \
-        JsonStructHelper::Deserialize(this->_##name, ___json_object_.toObject()[#name]);                                                             \
+        JsonStructHelper::Deserialize(this->JS_F(name), ___json_object_.toObject()[#name]);                                                          \
     else                                                                                                                                             \
-        this->_##name = this->__default__##name;                                                                                                     \
+        this->JS_F(name) = this->__default__##name;                                                                                                  \
     this->p##name.markDirty();
 
 // ========================================================================================================= Public
@@ -48,7 +48,32 @@
     }                                                                                                                                                \
     void loadJson(const QJsonValue &___json_object_)                                                                                                 \
     {                                                                                                                                                \
-        FOR_EACH(_QJS_FROM_JSON_BF, __VA_ARGS__)                                                                                                     \
+        FOR_EACH(_QJS_FROM_JSON_BF, __VA_ARGS__);                                                                                                    \
+    }                                                                                                                                                \
+    static this_type_t fromJson(const QJsonValue &___json_object_)                                                                                   \
+    {                                                                                                                                                \
+        this_type_t value;                                                                                                                           \
+        value.loadJson(___json_object_);                                                                                                             \
+        return value;                                                                                                                                \
+    }
+
+// ========================================================================================================= Plain JSON
+#define __TOJSON_PLAIN_F(name) ___json_object_.insert(#name, JsonStructHelper::Serialize(this->name));
+#define __FROMJSON_PLAIN_F(name)                                                                                                                     \
+    if (___json_object_.toObject().contains(#name))                                                                                                  \
+        JsonStructHelper::Deserialize(this->name, ___json_object_.toObject()[#name]);
+
+#define QJS_PLAIN_JSON(...)                                                                                                                          \
+  public:                                                                                                                                            \
+    QJsonObject toJson() const                                                                                                                       \
+    {                                                                                                                                                \
+        QJsonObject ___json_object_;                                                                                                                 \
+        FOR_EACH(__TOJSON_PLAIN_F, __VA_ARGS__)                                                                                                      \
+        return ___json_object_;                                                                                                                      \
+    }                                                                                                                                                \
+    void loadJson(const QJsonValue &___json_object_)                                                                                                 \
+    {                                                                                                                                                \
+        FOR_EACH(__FROMJSON_PLAIN_F, __VA_ARGS__)                                                                                                    \
     }
 
 class JsonStructHelper

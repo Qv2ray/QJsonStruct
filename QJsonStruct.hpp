@@ -19,38 +19,31 @@ JS_MACRO_ARGUMENT_NO_WARN
 // QJsonStruct Public APIS
 //
 // ========================================================================================================
-#define QJS_PROP(TYPE, NAME, DEFAULT, ...)                                                                                                           \
+#define QJS_PROP(TYPE, NAME, ...) QJS_PROP_D(TYPE, NAME, TYPE{}, __VA_ARGS__)
+#define QJS_PROP_D(TYPE, NAME, DEFAULT, ...)                                                                                                         \
                                                                                                                                                      \
   private:                                                                                                                                           \
-    TYPE JS_F(NAME) = (DEFAULT);                                                                                                                     \
-    const TYPE __default__##NAME = (DEFAULT);                                                                                                        \
+    const TYPE __default__##NAME = TYPE{ DEFAULT };                                                                                                  \
                                                                                                                                                      \
   public:                                                                                                                                            \
+    TYPE JS_F(NAME) = TYPE{ DEFAULT };                                                                                                               \
     Q_PROPERTY(TYPE NAME MEMBER JS_F(NAME) RESET reset_##NAME __VA_ARGS__)                                                                           \
-    QProperty<TYPE> p##NAME = QProperty<TYPE>([this]() { return _##NAME; });                                                                         \
+    QProperty<TYPE> p##NAME = QProperty<TYPE>([this]() { return JS_F(NAME); });                                                                      \
     void set_##NAME(const TYPE _new)                                                                                                                 \
     {                                                                                                                                                \
         this->JS_F(NAME) = _new;                                                                                                                     \
         this->p##NAME.markDirty();                                                                                                                   \
-    }                                                                                                                                                \
-    std::add_const_t<TYPE> NAME() const                                                                                                              \
-    {                                                                                                                                                \
-        return JS_F(NAME);                                                                                                                           \
-    }                                                                                                                                                \
-    TYPE &NAME()                                                                                                                                     \
-    {                                                                                                                                                \
-        return JS_F(NAME);                                                                                                                           \
     }                                                                                                                                                \
     void reset_##NAME()                                                                                                                              \
     {                                                                                                                                                \
         set_##NAME(__default__##NAME);                                                                                                               \
     }
 
-#define QJS_CONSTRUCTOR(CLASS)                                                                                                                       \
+#define QJS_CONSTRUCTOR(CLASS, ...)                                                                                                                  \
     typedef CLASS this_type_t;                                                                                                                       \
                                                                                                                                                      \
   public:                                                                                                                                            \
-    CLASS(){};                                                                                                                                       \
+    CLASS() __VA_ARGS__{};                                                                                                                           \
     CLASS(const this_type_t &another)                                                                                                                \
     {                                                                                                                                                \
         *this = another;                                                                                                                             \
@@ -61,7 +54,7 @@ JS_MACRO_ARGUMENT_NO_WARN
         loadJson(another.toJson());                                                                                                                  \
     }
 
-#define QJS_FUNCTION(...) JS_MACRO_ARGUMENT_NO_WARN QJS_FUNC_JSON(__VA_ARGS__) QJS_FUNC_COMPARE(__VA_ARGS__) JS_MACRO_ARGUMENT_RESTORE_WARN
+#define QJS_FUNCTION(...) QJS_FUNC_JSON(__VA_ARGS__) QJS_FUNC_COMPARE(__VA_ARGS__)
 
 #define QJS_RBINDING(source, source_prop, target, target_prop)                                                                                       \
     do                                                                                                                                               \

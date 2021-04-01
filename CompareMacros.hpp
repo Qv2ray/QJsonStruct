@@ -19,5 +19,5 @@
 #define _QJS_COMPARE_B(...) FOR_EACH_2(__COMPARE_B, __VA_ARGS__)
 #define _QJS_COMPARE_BF(option) _QJS_COMPARE_##option
 
-#define __COMPARE_F(name) (this->name() == ___another___instance__.name()) &&
-#define __COMPARE_B(base) ((base) * this == (base) _another) &&
+#define __COMPARE_F(name) (this->JS_F(name) == ___another___instance__.JS_F(name)) &&
+#define __COMPARE_B(base) ((base) * this == (base) ___another___instance__) &&
