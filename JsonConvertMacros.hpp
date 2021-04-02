@@ -23,7 +23,7 @@
 
 #define __TOJSON_B(base) JsonStructHelper::MergeJson(___json_object_, base::toJson());
 #define __TOJSON_F(name)                                                                                                                             \
-    if (staticMetaObject.property(staticMetaObject.indexOfProperty(#name)).isRequired() || !(name == this->__default__##name))                       \
+    if (staticMetaObject.property(staticMetaObject.indexOfProperty(#name)).isRequired() || !name.isDefault())                                        \
     {                                                                                                                                                \
         ___json_object_.insert(#name, JsonStructHelper::Serialize(this->JS_F(name)));                                                                \
     }
@@ -31,10 +31,11 @@
 #define __FROMJSON_B(name) name::loadJson(___json_object_);
 #define __FROMJSON_F(name)                                                                                                                           \
     if (___json_object_.toObject().contains(#name))                                                                                                  \
+    {                                                                                                                                                \
         JsonStructHelper::Deserialize(this->JS_F(name), ___json_object_.toObject()[#name]);                                                          \
-    else                                                                                                                                             \
-        this->JS_F(name) = this->__default__##name;                                                                                                  \
-    this->p##name.markDirty();
+    }
+
+// this->p##name.markDirty();
 
 // ========================================================================================================= Public
 
