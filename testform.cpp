@@ -7,10 +7,11 @@
 TestForm::TestForm(QWidget *parent) : QWidget(parent)
 {
     setupUi(this);
-    myStruct f = object;
-    QJS_RWBINDING(object.child(), childString, lineEdit, text, &QLineEdit::textChanged);
-    QJS_RWBINDING(object, string, lineEdit, text, &QLineEdit::textChanged);
-    QJS_RBINDING(object.child(), childString, label, text);
+    QJS_RWBINDING(object.child->childString, lineEdit, text, &QLineEdit::textChanged);
+    QJS_RWBINDING(object.string, lineEdit, text, &QLineEdit::textChanged);
+    QJS_RBINDING(object.child->childString, label, text);
+    const auto t = object.staticMetaObject;
+    t.property(1);
 }
 
 void TestForm::changeEvent(QEvent *e)
@@ -25,11 +26,11 @@ void TestForm::changeEvent(QEvent *e)
 
 void TestForm::on_pushButton_clicked()
 {
-    QMessageBox::information(this, "Values", "UI: " + lineEdit->text() + "\n" + "Object: " + object.pstring);
+    QMessageBox::information(this, "Values", "UI: " + lineEdit->text() + "\n" + "Object: " + object.string);
 }
 
 void TestForm::on_pushButton_2_clicked()
 {
-    object.set_string("????");
-    object.child().set_childString("val");
+    object.string = "????";
+    object.child->childString = "val";
 }

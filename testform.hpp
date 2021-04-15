@@ -21,11 +21,5 @@ class TestForm
     void on_pushButton_clicked();
     void on_pushButton_2_clicked();
 
-#define prop_decl                                                                                                                                    \
-  private:                                                                                                                                           \
-    typedef QPropertyChangeHandler<std::function<void()>> PCH;                                                                                       \
-    QMutex x;                                                                                                                                        \
-    std::list<PCH> pch;
-
-    prop_decl
+    QJS_BINDING_HELPERS
 };

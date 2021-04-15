@@ -10,13 +10,13 @@ struct ChildObject
   public:
     QJS_CONSTRUCTOR(ChildObject)
 
-    QJS_PROP(QString, childString, "", OPTIONAL)
-    QJS_PROP(int, childInt, 0, REQUIRED)
+    QJS_PROP_D(QString, childString, "")
+    QJS_PROP_D(int, childInt, 0, REQUIRED)
 
     QJS_FUNCTION(F(childString, childInt))
 };
 
-struct myStruct
+class myStruct
 {
     Q_GADGET
     typedef QMap<QString, QString> stringmap;
@@ -24,11 +24,11 @@ struct myStruct
   public:
     QJS_CONSTRUCTOR(myStruct)
 
-    QJS_PROP(int, x, 0, REQUIRED)
-    QJS_PROP(QString, string, "vstring", REQUIRED)
-    QJS_PROP(QList<QString>, stringlist, QList<QString>{}, OPTIONAL)
-    QJS_PROP(stringmap, map, stringmap{}, OPTIONAL)
-    QJS_PROP(ChildObject, child, ChildObject{}, REQUIRED)
+    QJS_PROP_D(int, x, 0, REQUIRED)
+    QJS_PROP_D(QString, string, "vstring", REQUIRED)
+    QJS_PROP(QList<QString>, stringlist)
+    QJS_PROP(stringmap, map)
+    QJS_PROP(ChildObject, child)
 
     QJS_FUNCTION(F(x, string, stringlist))
 };
