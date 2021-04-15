@@ -4,9 +4,9 @@
 #include <QBindable>
 #include <QObject>
 
-struct ChildObject
+struct ChildObject : public QObject
 {
-    Q_GADGET
+    Q_OBJECT
   public:
     QJS_CONSTRUCTOR(ChildObject)
 
@@ -16,9 +16,9 @@ struct ChildObject
     QJS_FUNCTION(F(childString, childInt))
 };
 
-class myStruct
+class myStruct : public QObject
 {
-    Q_GADGET
+    Q_OBJECT
     typedef QMap<QString, QString> stringmap;
 
   public:

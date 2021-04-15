@@ -7,9 +7,9 @@
 TestForm::TestForm(QWidget *parent) : QWidget(parent)
 {
     setupUi(this);
-    QJS_RWBINDING(object.child->childString, lineEdit, text, &QLineEdit::textChanged);
-    QJS_RWBINDING(object.string, lineEdit, text, &QLineEdit::textChanged);
-    QJS_RBINDING(object.child->childString, label, text);
+    QJS_RWBINDING(object.child->childString, lineEdit, "text", &QLineEdit::textChanged);
+    QJS_RWBINDING(object.string, lineEdit, "text", &QLineEdit::textChanged);
+    QJS_RBINDING(object.child->childString, label, "text");
     const auto t = object.staticMetaObject;
     t.property(1);
 }

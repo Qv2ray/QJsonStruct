@@ -50,12 +50,6 @@
     void loadJson(const QJsonValue &___json_object_)                                                                                                 \
     {                                                                                                                                                \
         FOR_EACH(_QJS_FROM_JSON_BF, __VA_ARGS__);                                                                                                    \
-    }                                                                                                                                                \
-    static this_type_t fromJson(const QJsonValue &___json_object_)                                                                                   \
-    {                                                                                                                                                \
-        this_type_t value;                                                                                                                           \
-        value.loadJson(___json_object_);                                                                                                             \
-        return value;                                                                                                                                \
     }
 
 // ========================================================================================================= Plain JSON
@@ -76,6 +70,20 @@
     {                                                                                                                                                \
         FOR_EACH(__FROMJSON_PLAIN_F, __VA_ARGS__)                                                                                                    \
     }
+
+namespace QJsonStruct
+{
+    template<typename T>
+    inline void ExternalDeserializer(T &t, const QJsonValue &d)
+    {
+        t.loadJson(d);
+    }
+    template<typename T>
+    inline QJsonValue ExternalSerializer(const T &t)
+    {
+        return t.toJson();
+    }
+} // namespace QJsonStruct
 
 class JsonStructHelper
 {
@@ -157,7 +165,7 @@ class JsonStructHelper
         else if constexpr (std::is_same_v<T, QJsonArray>)
             t = d.toArray();
         else
-            t.loadJson(d);
+            QJsonStruct::ExternalDeserializer<T>(t, d);
     }
 
     // =========================== Store Json Data ===========================
@@ -224,6 +232,6 @@ class JsonStructHelper
         else if constexpr (std::is_same_v<T, QJsonObject> || std::is_same_v<T, QJsonArray>)
             return t;
         else
-            return t.toJson();
+            return QJsonStruct::ExternalSerializer<T>(t);
     }
 };
