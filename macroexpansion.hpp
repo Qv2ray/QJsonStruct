@@ -10,6 +10,7 @@
 #define FOR_EACH_RSEQ_N() 16, 15, 14, 13, 12, 11, 10, 09, 08, 07, 06, 05, 04, 03, 02, 01, 00
 
 #define EXPAND(...) __VA_ARGS__
+#define COMMA ,
 
 // Bad hack ==========================================================================================================================
 
@@ -137,3 +138,22 @@
 #define _3X_FOR_EACH_(N, what, ...) EXPAND(CONCATENATE(_3X_FOR_EACH_, N)(what, __VA_ARGS__))
 #define _3X_FOR_EACH(what, ...) _3X_FOR_EACH_(FOR_EACH_NARG(__VA_ARGS__), what, __VA_ARGS__)
 #define FOR_EACH_3(what, ...) _3X_FOR_EACH(what, __VA_ARGS__)
+
+#define FOR_EACH_DELIM_01(what, delimiter, x, ...) what(x)
+#define FOR_EACH_DELIM_02(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_01(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_03(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_02(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_04(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_03(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_05(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_04(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_06(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_05(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_07(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_06(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_08(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_07(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_09(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_08(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_10(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_09(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_11(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_10(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_12(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_11(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_13(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_12(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_14(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_13(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_15(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_14(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_16(what, delimiter, x, ...) what(x) delimiter EXPAND(FOR_EACH_DELIM_15(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM_(N, what, delimiter, ...) EXPAND(CONCATENATE(FOR_EACH_DELIM_, N)(what, delimiter, __VA_ARGS__))
+#define FOR_EACH_DELIM(what, delimiter, ...) FOR_EACH_DELIM_(FOR_EACH_NARG(__VA_ARGS__), what, delimiter, __VA_ARGS__)

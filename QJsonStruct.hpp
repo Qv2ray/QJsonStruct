@@ -9,7 +9,7 @@ JS_MACRO_ARGUMENT_NO_WARN
 #include <QProperty>
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    #error "QJsonStruct does not support Qt version lesser than 6.0.0."
+#error "QJsonStruct does not support Qt version lesser than 6.0.0."
 #endif
 
 #define _QJS_PROP_OPTIONAL
@@ -20,15 +20,6 @@ JS_MACRO_ARGUMENT_NO_WARN
     Q_SIGNAL void on_##NAME##_changed();                                                                                                             \
     QJS_Prop<TYPE> JS_F(NAME){ [this]() { on_##NAME##_changed(); }, TYPE{ DEFAULT } };                                                               \
     Q_PROPERTY(TYPE NAME MEMBER JS_F(NAME) NOTIFY on_##NAME##_changed __VA_ARGS__)
-#define _QJS_CONSTRUCTOR_IMPL(CLASS, ...)                                                                                                            \
-    using this_type_t = CLASS;                                                                                                                       \
-                                                                                                                                                     \
-  public:                                                                                                                                            \
-    CLASS() __VA_ARGS__{};                                                                                                                           \
-    CLASS(const CLASS &another)                                                                                                                      \
-    {                                                                                                                                                \
-        *this = another;                                                                                                                             \
-    }
 
 // ========================================================================================================
 //
@@ -41,20 +32,20 @@ struct QJS_Prop
 {
   public:
     // clang-format off
-    virtual       T* operator->()       { return &value; }
-    virtual const T* operator->() const { return &value; }
+          T* operator->()       { return &value; }
+    const T* operator->() const { return &value; }
 
-    virtual       T& operator()()       { return value; }
-    virtual const T& operator()() const { return value; }
+          T& operator()()       { return value; }
+    const T& operator()() const { return value; }
 
-    virtual const T  operator*()  const { return value; }
-    virtual       T& operator*()        { return value; }
+          T& operator*()        { return value; }
+    const T& operator*()  const { return value; }
 
-    virtual operator       T&()         { return value; }
-    virtual operator const T&()   const { return value; }
+    operator       T&()         { return value; }
+    operator const T&()   const { return value; }
 
-    virtual           T& operator=(const T& f)           { if (value == f)       return value; value = f;       pRealValue.markDirty(); onChanged(); return value; }
-    virtual QJS_Prop<T>& operator=(const QJS_Prop<T>& f) { if (value == f.value) return *this; value = f.value; pRealValue.markDirty(); onChanged(); return *this; }
+             T & operator=(const T& f)           { if (value == f)       return value; value = f;       pRealValue.markDirty(); onChanged(); return value; }
+    QJS_Prop<T>& operator=(const QJS_Prop<T>& f) { if (value == f.value) return *this; value = f.value; pRealValue.markDirty(); onChanged(); return *this; }
 
 
     QJS_Prop<T> &operator++() { value++; return *this; }
@@ -102,18 +93,33 @@ struct QJS_Prop
     template<typename TSender, typename Func>
     inline void WBindTo(const TSender *target, const char *target_prop, Func target_slot)
     {
+        static_assert(std::is_base_of_v<QObject, TSender>, "Wrong Usage");
         QObject::connect(target, target_slot, [=]() { *this = ((QObject *) target)->property(target_prop).value<T>(); });
     }
 };
 
 #define QJS_PROP(TYPE, NAME, ...) _QJS_PROP_IMPL(TYPE, NAME, TYPE{}, __VA_ARGS__)
 #define QJS_PROP_D(TYPE, NAME, DEFAULT, ...) _QJS_PROP_IMPL(TYPE, NAME, DEFAULT, __VA_ARGS__)
-#define QJS_CONSTRUCTOR(CLASS, ...) _QJS_CONSTRUCTOR_IMPL(CLASS, __VA_ARGS__)
 
-#define QJS_FUNCTION(...)                                                                                                                            \
-    QJS_FUNC_JSON(__VA_ARGS__);                                                                                                                      \
-    QJS_FUNC_COMPARE(__VA_ARGS__);                                                                                                                   \
-    QJS_FUNC_COPY(__VA_ARGS__);
+#define QJS_FUNCTION_DEFAULT_CONSTRUCTOR(CLASS, ...)                                                                                                 \
+    CLASS(){};                                                                                                                                       \
+    virtual ~CLASS(){};
+
+#define __QJS_CTOR_B(base) base()
+#define __QJS_CTOR_F(name)
+
+#define QJS_FUNCTION(CLASS, ...)                                                                                                                     \
+  public:                                                                                                                                            \
+    QJS_FUNCTION_DEFAULT_CONSTRUCTOR(CLASS, __VA_ARGS__)                                                                                             \
+    QJS_FUNC_COPY(CLASS, __VA_ARGS__);                                                                                                               \
+    QJS_FUNC_JSON(CLASS, __VA_ARGS__);                                                                                                               \
+    QJS_FUNC_COMP(CLASS, __VA_ARGS__);
+
+#define QJS_FUNCTION_NODCTOR(CLASS, ...)                                                                                                             \
+  public:                                                                                                                                            \
+    QJS_FUNC_COPY(CLASS, __VA_ARGS__);                                                                                                               \
+    QJS_FUNC_JSON(CLASS, __VA_ARGS__);                                                                                                               \
+    QJS_FUNC_COMP(CLASS, __VA_ARGS__);
 
 #define QJS_RBINDING(sprop, target, tprop) property_bindings.push_back(sprop.RBindTo(target, tprop));
 #define QJS_WBINDING(sprop, target, tprop, tslot) sprop.WBindTo(target, tprop, tslot);

@@ -39,17 +39,21 @@
 
 // ========================================================================================================= Public
 
-#define QJS_FUNC_JSON(...)                                                                                                                           \
+#define QJS_FUNC_JSON(CLASS, ...)                                                                                                                    \
   public:                                                                                                                                            \
     QJsonObject toJson() const                                                                                                                       \
     {                                                                                                                                                \
         QJsonObject ___json_object_;                                                                                                                 \
-        FOR_EACH(_QJS_TO_JSON_BF, __VA_ARGS__)                                                                                                       \
+        FOR_EACH(_QJS_TO_JSON_BF, __VA_ARGS__);                                                                                                      \
         return ___json_object_;                                                                                                                      \
     }                                                                                                                                                \
     void loadJson(const QJsonValue &___json_object_)                                                                                                 \
     {                                                                                                                                                \
         FOR_EACH(_QJS_FROM_JSON_BF, __VA_ARGS__);                                                                                                    \
+    }                                                                                                                                                \
+    CLASS(const QJsonObject &json)                                                                                                                   \
+    {                                                                                                                                                \
+        loadJson(json);                                                                                                                              \
     }
 
 // ========================================================================================================= Plain JSON
