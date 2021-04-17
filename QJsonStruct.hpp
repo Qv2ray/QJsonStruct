@@ -30,29 +30,39 @@ JS_MACRO_ARGUMENT_NO_WARN
 template<typename T>
 struct QJS_Prop
 {
+  private:
+    T &set(T v)
+    {
+        if (value == v)
+            return value;
+        value = v;
+        pRealValue.markDirty();
+        onChanged();
+        return value;
+    }
+
   public:
     // clang-format off
           T* operator->()       { return &value; }
     const T* operator->() const { return &value; }
 
-          T& operator()()       { return value; }
-    const T& operator()() const { return value; }
+//          T& operator()()       { return value; }
+//    const T& operator()() const { return value; }
 
-          T& operator*()        { return value; }
-    const T& operator*()  const { return value; }
+          T& operator*()       { return value; }
+    const T& operator*() const { return value; }
 
-    operator       T&()         { return value; }
-    operator const T&()   const { return value; }
+    operator       T()         { return value; }
+    operator const T()   const { return value; }
 
-             T & operator=(const T& f)           { if (value == f)       return value; value = f;       pRealValue.markDirty(); onChanged(); return value; }
-    QJS_Prop<T>& operator=(const QJS_Prop<T>& f) { if (value == f.value) return *this; value = f.value; pRealValue.markDirty(); onChanged(); return *this; }
-
+    T & operator=(const T& f)           { return set(f); }
+    T & operator=(const QJS_Prop<T>& f) { return set(f.value); }
 
     QJS_Prop<T> &operator++() { value++; return *this; }
     QJS_Prop<T> &operator--() { value--; return *this; }
 
-    virtual bool operator==(const T &right) const { return value == right; }
-    virtual bool operator!=(const T &right) const { return !(value == right); }
+    friend bool operator==(const QJS_Prop<T>& left, const T &right) { return   left.value == right ; }
+    friend bool operator!=(const QJS_Prop<T>& left, const T &right) { return !(left.value == right); }
 
     template<typename Y> void operator<<(const Y &another) { value << another; }
     template<typename Y> void operator>>(const Y &another) { value >> another; }
